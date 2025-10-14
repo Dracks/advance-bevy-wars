@@ -354,6 +354,8 @@ pub enum FileAssets {
     SoundsUiToggle004,
     #[allow(dead_code)]
     TextCredits,
+    #[allow(dead_code)]
+    TexturesArrayTexture,
 }
 
 impl FileAssets {
@@ -535,6 +537,7 @@ impl FileAssets {
             FileAssets::SoundsUiToggle003 => "sounds/ui/toggle_003.ogg",
             FileAssets::SoundsUiToggle004 => "sounds/ui/toggle_004.ogg",
             FileAssets::TextCredits => "text/credits.md",
+            FileAssets::TexturesArrayTexture => "textures/array_texture.png",
         }
     }
 
