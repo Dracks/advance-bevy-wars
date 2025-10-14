@@ -6,7 +6,10 @@ pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Board::default())
+        let TEST_BOARD = vec![
+            vec![ "m", "r", "w", "p"]
+        ];
+        app.insert_resource(Board::from(TEST_BOARD))
             .add_systems(Startup, spawn_terrain);
     }
 }
@@ -24,7 +27,21 @@ impl Terrain {
     fn get_pos(&self)->UVec2 {
         match self {
             Terrain::Plain => uvec2(0,15),
-            _ => uvec2(0,0),
+            Terrain::Sea => uvec2(1, 5),
+            Terrain::Road => uvec2(1, 1),
+            Terrain::Mountain => uvec2(40, 1),
+        }
+    }
+}
+
+impl From<&str> for Terrain {
+    fn from(value: &str) -> Self {
+        match value {
+            "p" => Terrain::Plain,
+            "w" => Terrain::Sea,
+            "r" => Terrain::Road,
+            "m" => Terrain::Mountain,
+            value => panic!("Value {value} unsupported"),
         }
     }
 }
@@ -50,10 +67,33 @@ impl Board {
         let mut all_linear = Vec::with_capacity(self.width*self.height);
         for x in 0..self.width {
             for y in 0..self.height {
-                all_linear.push((uvec2(x as u32,y as u32), self.tiles[x][y]))
+
+                all_linear.push((uvec2(x as u32,y as u32), self.tiles[y][x]))
             }
         }
         all_linear
+    }
+}
+
+impl From<Vec<Vec<&str>>> for Board {
+    fn from(value: Vec<Vec<&str>>) -> Self {
+        let height = value.len();
+        assert!(height>0, "The value must contain data (Height = 0)");
+        let width = value[0].len();
+        assert!(width>0, "The value must contain data (Width = 0)");
+        let mut tiles = Vec::with_capacity(height);
+        for y in 0..height {
+            bevy::log::info!("Transforming y {y}");
+            let row = value[y].clone();
+            assert_eq!(row.len(), width, "Row {y} has an invalid width");
+            tiles.push(row.iter().map(|text| Terrain::from(*text)).collect());
+        }
+        bevy::log::info!("Transforming {width} {height}");
+        Self {
+            width,
+            height,
+            tiles,
+        }
     }
 }
 
