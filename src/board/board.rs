@@ -1,50 +1,19 @@
 use bevy::prelude::*;
+use rand::seq::IndexedRandom;
 
-use crate::assets::FileAssets;
+use crate::{assets::FileAssets, board::terrain::Terrain};
 
 pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
-        let TEST_BOARD = vec![
-            vec![ "m", "r", "w", "p"]
-        ];
-        app.insert_resource(Board::from(TEST_BOARD))
+        app.insert_resource(Board::random(UVec2::splat(20)))
             .add_systems(Startup, spawn_terrain);
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub enum Terrain {
-    #[default]
-    Plain,
-    Sea,
-    Mountain,
-    Road
-}
 
-impl Terrain {
-    fn get_pos(&self)->UVec2 {
-        match self {
-            Terrain::Plain => uvec2(0,15),
-            Terrain::Sea => uvec2(1, 5),
-            Terrain::Road => uvec2(1, 1),
-            Terrain::Mountain => uvec2(40, 1),
-        }
-    }
-}
 
-impl From<&str> for Terrain {
-    fn from(value: &str) -> Self {
-        match value {
-            "p" => Terrain::Plain,
-            "w" => Terrain::Sea,
-            "r" => Terrain::Road,
-            "m" => Terrain::Mountain,
-            value => panic!("Value {value} unsupported"),
-        }
-    }
-}
 
 
 #[derive(Resource)]
@@ -55,6 +24,10 @@ pub struct Board {
 }
 
 impl Board {
+    pub fn get_size(&self) -> (usize, usize) {
+        (self.width, self.height)
+    }
+
     pub fn fill(width: usize, height:usize, terrain: Terrain) -> Self {
         Self {
             width,
@@ -67,11 +40,33 @@ impl Board {
         let mut all_linear = Vec::with_capacity(self.width*self.height);
         for x in 0..self.width {
             for y in 0..self.height {
-
                 all_linear.push((uvec2(x as u32,y as u32), self.tiles[y][x]))
             }
         }
         all_linear
+    }
+
+    pub fn random(size: UVec2) -> Self {
+        let width= size.x as usize;
+        let height= size.y as usize;
+        let terrains = vec![Terrain::Mountain, Terrain::Plain, Terrain::Road, Terrain::Sea];
+        let mut tiles = Vec::with_capacity(height);
+        let mut rng = rand::rng();
+        for _ in 0..size.y {
+            let mut row = Vec::with_capacity(width);
+            for _ in 0..size.x{
+                match terrains.choose(&mut rng) {
+                    Some(terrain) => row.push(terrain.clone()),
+                    None => panic!("No terrain picked?")
+                }
+            }
+            tiles.push(row);
+        }
+        Self {
+            width,
+            height,
+            tiles
+        }
     }
 }
 
