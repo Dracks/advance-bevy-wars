@@ -86,6 +86,7 @@ name = "advance-bevy-wars"
 version = "0.1.0"
 dependencies = [
  "assets_generator",
+ "auto-tiler",
  "bevy",
  "bevy-inspector-egui",
  "bevy_flair",
