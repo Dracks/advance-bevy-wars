@@ -100,9 +100,9 @@ mod tests {
     }
 
     fn get_tiler(terrain: i32) -> AutoTiler<i32, char> {
-        AutoTiler::default()
+        let auto_tiler = AutoTiler::default();
             // Tile 'a' - cap veí específic (per defecte)
-            .add_tile(TileDefinition::new('a', terrain))
+        auto_tiler.add_tile(TileDefinition::new('a', terrain))
             // Tile 'b' - requereix veí al Nord
             .add_tile(
                 TileDefinition::new('b', terrain)
@@ -112,7 +112,8 @@ mod tests {
             .add_tile(
                 TileDefinition::new('c', terrain)
                     .add_possible_requirements(vec![Requirement::new(5, &vec![Direction::West])]),
-            )
+            );
+        auto_tiler;
     }
 
     fn create_board(grid: Vec<Vec<i32>>) -> std::collections::HashMap<UVec2, i32> {

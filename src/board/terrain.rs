@@ -1,4 +1,4 @@
-use bevy::{math::{uvec2, UVec2}, render::render_resource::AsBindGroupShaderType};
+use bevy::{math::{uvec2, UVec2}};
 use auto_tiler::{AutoTiler, Direction, Requirement, TileDefinition};
 
 #[derive(Debug, Eq, Clone, Copy, PartialEq, Default)]
@@ -8,18 +8,6 @@ pub enum Terrain {
     Sea,
     Mountain,
     Road,
-}
-
-impl Terrain {
-
-    pub fn get_pos(&self)->UVec2 {
-        match self {
-            Terrain::Plain => uvec2(0,15),
-            Terrain::Sea => uvec2(1, 6),
-            Terrain::Road => uvec2(3, 3),
-            Terrain::Mountain => uvec2(1, 21),
-        }
-    }
 }
 
 impl From<&str> for Terrain {
@@ -37,7 +25,31 @@ impl From<&str> for Terrain {
 fn add_std_tiles(auto_tiler:&mut  AutoTiler<Terrain, UVec2>, terrain: Terrain, offset: UVec2){
     auto_tiler.add_tile(
         TileDefinition::new(uvec2(0,0)+offset, terrain)
-            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::East, Direction::South, Direction::SouthWest])])
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::East, Direction::South, Direction::SouthEast])])
+    ).add_tile(
+        TileDefinition::new(uvec2(0,1)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::North, Direction::South, Direction::East])])
+    ).add_tile(
+        TileDefinition::new(uvec2(0,2)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::East, Direction::North, Direction::NorthEast])])
+    ).add_tile(
+        TileDefinition::new(uvec2(3,1)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::North, Direction::South])])
+    ).add_tile(
+        TileDefinition::new(uvec2(1,3)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::East, Direction::West])])
+    ).add_tile(
+        TileDefinition::new(uvec2(3,0)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![ Direction::South])])
+    ).add_tile(
+        TileDefinition::new(uvec2(3,2)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::North])])
+    ).add_tile(
+        TileDefinition::new(uvec2(0,3)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::East])])
+    ).add_tile(
+        TileDefinition::new(uvec2(2,4)+offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::West])])
     ).add_tile(
         TileDefinition::new(uvec2(4,2)+offset, terrain)
             .add_possible_requirements(vec![Requirement::new(terrain, &vec![Direction::East, Direction::South])])

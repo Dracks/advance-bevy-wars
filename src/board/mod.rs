@@ -2,4 +2,4 @@ mod board;
 mod terrain;
 
 pub use board::BoardPlugin;
-pub use board::Board;
+pub use board::{Board, MainBoard};

@@ -14,6 +14,8 @@ impl Plugin for BoardPlugin {
     }
 }
 
+#[derive(Component)]
+pub struct MainBoard;
 
 #[derive(Resource)]
 pub struct Tiler(AutoTiler<Terrain, UVec2>);
@@ -156,16 +158,18 @@ fn spawn_terrain(mut commands: Commands, assets: Res<AssetServer>, auto_tiler: R
     let texture_atlas = helper.atlas_layout(UVec2::splat(32));
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     let auto_tiler : &AutoTiler<Terrain, UVec2> = &auto_tiler.0;
-
-    for pos in board.get_all() {
-        if let Some(tile_coords) = auto_tiler.get_tile::<UVec2>(&*board, pos){
-            commands.spawn((
-                Sprite::from_atlas_image(texture_handle.clone(), TextureAtlas {
-                    layout: texture_atlas_handle.clone(),
-                    index: helper.index(tile_coords),
-                }),
-                Transform::from_translation(vec3((pos.x*32) as f32, (pos.y*32) as f32, 0.))
-            ));
+    commands.spawn((Transform::IDENTITY, Visibility::Inherited, MainBoard)).with_children(|parent| {
+        for pos in board.get_all() {
+            if let Some(tile_coords) = auto_tiler.get_tile::<UVec2>(&*board, pos){
+                parent.spawn((
+                    Sprite::from_atlas_image(texture_handle.clone(), TextureAtlas {
+                        layout: texture_atlas_handle.clone(),
+                        index: helper.index(tile_coords),
+                    }),
+                    Transform::from_translation(vec3((pos.x*32) as f32, (pos.y*32) as f32, 0.)),
+                ));
+            }
         }
-    }
+    });
+
 }
