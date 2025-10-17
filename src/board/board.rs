@@ -2,7 +2,10 @@ use auto_tiler::{AutoTiler, BoardTrait, Direction, Neighbor};
 use bevy::prelude::*;
 use rand::seq::IndexedRandom;
 
-use crate::{assets::FileAssets, board::terrain::{build_auto_tiler, Terrain}};
+use crate::{
+    assets::FileAssets,
+    board::terrain::{Terrain, build_auto_tiler},
+};
 
 pub struct BoardPlugin;
 
@@ -32,7 +35,7 @@ impl Board {
         (self.width, self.height)
     }
 
-    pub fn fill(width: usize, height:usize, terrain: Terrain) -> Self {
+    pub fn fill(width: usize, height: usize, terrain: Terrain) -> Self {
         Self {
             width,
             height,
@@ -41,27 +44,32 @@ impl Board {
     }
 
     pub fn get_all(&self) -> Vec<UVec2> {
-        let mut all_linear = Vec::with_capacity(self.width*self.height);
+        let mut all_linear = Vec::with_capacity(self.width * self.height);
         for x in 0..self.width {
             for y in 0..self.height {
-                all_linear.push(uvec2(x as u32,y as u32))
+                all_linear.push(uvec2(x as u32, y as u32))
             }
         }
         all_linear
     }
 
     pub fn random(size: UVec2) -> Self {
-        let width= size.x as usize;
-        let height= size.y as usize;
-        let terrains = vec![Terrain::Mountain, Terrain::Plain, Terrain::Road, Terrain::Sea];
+        let width = size.x as usize;
+        let height = size.y as usize;
+        let terrains = vec![
+            Terrain::Mountain,
+            Terrain::Plain,
+            Terrain::Road,
+            Terrain::Sea,
+        ];
         let mut tiles = Vec::with_capacity(height);
         let mut rng = rand::rng();
         for _ in 0..size.y {
             let mut row = Vec::with_capacity(width);
-            for _ in 0..size.x{
+            for _ in 0..size.x {
                 match terrains.choose(&mut rng) {
                     Some(terrain) => row.push(terrain.clone()),
-                    None => panic!("No terrain picked?")
+                    None => panic!("No terrain picked?"),
                 }
             }
             tiles.push(row);
@@ -69,7 +77,7 @@ impl Board {
         Self {
             width,
             height,
-            tiles
+            tiles,
         }
     }
 }
@@ -78,14 +86,15 @@ impl BoardTrait<Terrain, UVec2> for Board {
     fn get(&self, pos: &UVec2) -> Option<&Terrain> {
         let x = pos.x as usize;
         let y = pos.y as usize;
-        if x>=self.width || y >= self.height {
-            return None
+        if x >= self.width || y >= self.height {
+            return None;
         }
         Some(&self.tiles[pos.y as usize][pos.x as usize])
     }
 
     fn get_neighbors(&self, pos: &UVec2, directions: &[Direction]) -> Vec<Neighbor<Terrain>> {
-        directions.iter()
+        directions
+            .iter()
             .filter_map(|dir| {
                 let neighbor_pos = match dir {
                     Direction::North => uvec2(pos.x, pos.y.checked_sub(1)?),
@@ -94,7 +103,8 @@ impl BoardTrait<Terrain, UVec2> for Board {
                     Direction::West => uvec2(pos.x.checked_sub(1)?, pos.y),
                     _ => return None,
                 };
-                self.get(&neighbor_pos).map(|terrain| Neighbor::new(*terrain, *dir))
+                self.get(&neighbor_pos)
+                    .map(|terrain| Neighbor::new(*terrain, *dir))
             })
             .collect()
     }
@@ -103,9 +113,9 @@ impl BoardTrait<Terrain, UVec2> for Board {
 impl From<Vec<Vec<&str>>> for Board {
     fn from(value: Vec<Vec<&str>>) -> Self {
         let height = value.len();
-        assert!(height>0, "The value must contain data (Height = 0)");
+        assert!(height > 0, "The value must contain data (Height = 0)");
         let width = value[0].len();
-        assert!(width>0, "The value must contain data (Width = 0)");
+        assert!(width > 0, "The value must contain data (Width = 0)");
         let mut tiles = Vec::with_capacity(height);
         for y in 0..height {
             bevy::log::info!("Transforming y {y}");
@@ -134,15 +144,13 @@ struct TileHelper {
 
 impl TileHelper {
     pub fn new(size: UVec2) -> Self {
-        Self {
-            size,
-        }
+        Self { size }
     }
 
     pub fn index(&self, pos: UVec2) -> usize {
-        assert!(self.size.x>=pos.x);
-        assert!(self.size.y>=pos.y);
-        return (pos.y*self.size.x+pos.x) as usize
+        assert!(self.size.x >= pos.x);
+        assert!(self.size.y >= pos.y);
+        return (pos.y * self.size.x + pos.x) as usize;
     }
 
     pub fn atlas_layout(&self, tile_size: UVec2) -> TextureAtlasLayout {
@@ -150,26 +158,39 @@ impl TileHelper {
     }
 }
 
-
-fn spawn_terrain(mut commands: Commands, assets: Res<AssetServer>, auto_tiler: Res<Tiler>, mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>, board: Res<Board>){
+fn spawn_terrain(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    auto_tiler: Res<Tiler>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    board: Res<Board>,
+) {
     let helper = TileHelper::new(uvec2(68, 45));
 
     let texture_handle = FileAssets::ImagesGameTerrain.load(&assets);
     let texture_atlas = helper.atlas_layout(UVec2::splat(32));
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
-    let auto_tiler : &AutoTiler<Terrain, UVec2> = &auto_tiler.0;
-    commands.spawn((Transform::IDENTITY, Visibility::Inherited, MainBoard)).with_children(|parent| {
-        for pos in board.get_all() {
-            if let Some(tile_coords) = auto_tiler.get_tile::<UVec2>(&*board, pos){
-                parent.spawn((
-                    Sprite::from_atlas_image(texture_handle.clone(), TextureAtlas {
-                        layout: texture_atlas_handle.clone(),
-                        index: helper.index(tile_coords),
-                    }),
-                    Transform::from_translation(vec3((pos.x*32) as f32, (pos.y*32) as f32, 0.)),
-                ));
+    let auto_tiler: &AutoTiler<Terrain, UVec2> = &auto_tiler.0;
+    commands
+        .spawn((Transform::IDENTITY, Visibility::Inherited, MainBoard))
+        .with_children(|parent| {
+            for pos in board.get_all() {
+                if let Some(tile_coords) = auto_tiler.get_tile::<UVec2>(&*board, pos) {
+                    parent.spawn((
+                        Sprite::from_atlas_image(
+                            texture_handle.clone(),
+                            TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index: helper.index(tile_coords),
+                            },
+                        ),
+                        Transform::from_translation(vec3(
+                            (pos.x * 32) as f32,
+                            (pos.y * 32) as f32,
+                            0.,
+                        )),
+                    ));
+                }
             }
-        }
-    });
-
+        });
 }

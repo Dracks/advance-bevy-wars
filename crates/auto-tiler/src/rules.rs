@@ -1,5 +1,3 @@
-use bevy::math::{IVec2, ivec2};
-
 use crate::board::Neighbor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -58,14 +56,28 @@ impl Direction {
 pub struct Requirement<T> {
     terrain: T,
     mask: u32,
+    not_mask: Option<u32>,
 }
 
 impl<T: Eq + Clone> Requirement<T> {
     pub fn new(terrain: T, directions: &Vec<Direction>) -> Self {
+        println!("Requirement {:?} = {}", directions, Direction::combine(directions));
         Self {
             terrain,
             mask: Direction::combine(directions),
+            not_mask: None,
         }
+    }
+
+    pub fn not_wanted(mut self, directions: &Vec<Direction>) -> Self {
+        self.not_mask = Some(Direction::combine(directions));
+        self
+    }
+
+    pub fn not_wanted_adj(mut self) -> Self {
+        let adj = Direction::combine(&Direction::ADJACENT);
+        self.not_mask = Some(adj & !self.mask);
+        self
     }
 
     pub fn matches(&self, neighbors: &Vec<Neighbor<T>>) -> bool {
@@ -74,7 +86,16 @@ impl<T: Eq + Clone> Requirement<T> {
             .filter(|neighbor| neighbor.terrain == self.terrain)
             .map(|neighbor| neighbor.direction)
             .collect();
-        (Direction::combine(&directions) & self.mask) == self.mask
+        let combination = Direction::combine(&directions);
+        let result = (combination & self.mask) == self.mask;
+        let not_wanted = match self.not_mask {
+            None => false,
+            Some(not_mask) => {
+                not_mask & combination > 0
+            }
+        };
+        // println!("R matches: {combination} & {} ({}) = {} => {result} & {:?} => {not_wanted} ", self.mask, (combination&self.mask), self.mask, self.not_mask);
+        result && ! not_wanted
     }
 }
 
@@ -100,5 +121,41 @@ mod tests {
             false
         );
         assert_eq!(subject.matches(&vec![north_one, east_one, south_one]), true);
+    }
+
+    #[test]
+    fn test_no_directions() {
+        let subject = Requirement::new(1, &vec![]);
+        let north_one = Neighbor::new(1, Direction::North);
+        let south_one = Neighbor::new(1, Direction::South);
+        let north_two = Neighbor::new(2, Direction::North);
+
+        assert_eq!(subject.matches(&vec![north_one]), true);
+        assert_eq!(subject.matches(&vec![north_two]), true);
+        assert_eq!(subject.matches(&vec![south_one]), true);
+    }
+
+    #[test]
+    fn test_not_directions() {
+        let subject = Requirement::new(1, &vec![]).not_wanted(&vec![Direction::North, Direction::South]);
+        let north_one = Neighbor::new(1, Direction::North);
+        let south_one = Neighbor::new(1, Direction::South);
+        let north_two = Neighbor::new(2, Direction::North);
+
+        assert_eq!(subject.matches(&vec![north_one]), false);
+        assert_eq!(subject.matches(&vec![north_two]), true);
+        assert_eq!(subject.matches(&vec![south_one]), false);
+    }
+
+    #[test]
+    fn test_not_adj_computed() {
+        let subject = Requirement::new(1, &vec![Direction::South]).not_wanted_adj();
+        let north_one = Neighbor::new(1, Direction::North);
+        let south_one = Neighbor::new(1, Direction::South);
+        let north_two = Neighbor::new(2, Direction::North);
+
+        assert_eq!(subject.matches(&vec![north_one, south_one.clone()]), false);
+        assert_eq!(subject.matches(&vec![north_two, south_one.clone()]), true);
+        assert_eq!(subject.matches(&vec![south_one]), true);
     }
 }

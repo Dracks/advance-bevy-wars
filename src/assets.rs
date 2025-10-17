@@ -389,7 +389,9 @@ impl FileAssets {
             FileAssets::ImagesGameEffectsExplosion => "images/game/effects/explosion.png",
             FileAssets::ImagesGameEffectsBomb => "images/game/effects/bomb.png",
             FileAssets::ImagesGameEffectsGunattack => "images/game/effects/gunattack.png",
-            FileAssets::ImagesGameEffectsSmallExplosion => "images/game/effects/small_explosion.png",
+            FileAssets::ImagesGameEffectsSmallExplosion => {
+                "images/game/effects/small_explosion.png"
+            }
             FileAssets::ImagesGameEffectsTorpedo => "images/game/effects/torpedo.png",
             FileAssets::ImagesGameEffectsVulcanCannon => "images/game/effects/vulcan_cannon.png",
             FileAssets::ImagesGameCursorHud36X36 => "images/game/cursor hud 36x36.png",
@@ -401,10 +403,16 @@ impl FileAssets {
             FileAssets::ImagesIconsNodesCarOutline => "images/icons/nodes/car-outline.svg",
             FileAssets::ImagesIconsNodesFlagOutline => "images/icons/nodes/flag-outline.svg",
             FileAssets::ImagesIconsNodesLayersOutline => "images/icons/nodes/layers-outline.svg",
-            FileAssets::ImagesIconsNodesPaperPlaneOutline => "images/icons/nodes/paper-plane-outline.svg",
+            FileAssets::ImagesIconsNodesPaperPlaneOutline => {
+                "images/icons/nodes/paper-plane-outline.svg"
+            }
             FileAssets::ImagesIconsNodesPersonOutline => "images/icons/nodes/person-outline.svg",
-            FileAssets::ImagesIconsNodesSettings2Outline => "images/icons/nodes/settings-2-outline.svg",
-            FileAssets::ImagesIconsNodesDownloadOutline => "images/icons/nodes/download-outline.svg",
+            FileAssets::ImagesIconsNodesSettings2Outline => {
+                "images/icons/nodes/settings-2-outline.svg"
+            }
+            FileAssets::ImagesIconsNodesDownloadOutline => {
+                "images/icons/nodes/download-outline.svg"
+            }
             FileAssets::ImagesIconsUiIconsDefault => "images/icons/ui/iconsDefault.png",
             FileAssets::ImagesIconsUiSheetBlack1X => "images/icons/ui/sheet_black1x.png",
             FileAssets::ImagesIconsUiSheetBlack2X => "images/icons/ui/sheet_black2x.png",
@@ -416,10 +424,16 @@ impl FileAssets {
             FileAssets::ImagesThemeGreySheet => "images/theme/greySheet.png",
             FileAssets::ImagesThemeRedSheet => "images/theme/redSheet.png",
             FileAssets::ImagesThemeYellowSheet => "images/theme/yellowSheet.png",
-            FileAssets::MusicsCyberpunkMoonlightSonataV2 => "musics/Cyberpunk Moonlight Sonata v2.mp3",
+            FileAssets::MusicsCyberpunkMoonlightSonataV2 => {
+                "musics/Cyberpunk Moonlight Sonata v2.mp3"
+            }
             FileAssets::MusicsAwesomeness => "musics/awesomeness.wav",
-            FileAssets::MusicsImmaculateCommandGeorgesDeMorgansThemeCodenameRecon => "musics/Immaculate_Command__Georges_DeMorgans_Theme_Codename_RECON.mp3",
-            FileAssets::MusicsTempestassAceInTheHoleMinatusLeonusMacrosThemeUnfinishedV08 => "musics/Tempestass_Ace_in_the_Hole__Minatus_Leonus_Macros_Theme_UNFINISHED_v0.8.mp3",
+            FileAssets::MusicsImmaculateCommandGeorgesDeMorgansThemeCodenameRecon => {
+                "musics/Immaculate_Command__Georges_DeMorgans_Theme_Codename_RECON.mp3"
+            }
+            FileAssets::MusicsTempestassAceInTheHoleMinatusLeonusMacrosThemeUnfinishedV08 => {
+                "musics/Tempestass_Ace_in_the_Hole__Minatus_Leonus_Macros_Theme_UNFINISHED_v0.8.mp3"
+            }
             FileAssets::SoundsChipsHandle6 => "sounds/chipsHandle6.ogg",
             FileAssets::SoundsEngineCircular000 => "sounds/engineCircular_000.ogg",
             FileAssets::SoundsExplosionCrunch000 => "sounds/explosionCrunch_000.ogg",
