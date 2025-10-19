@@ -31,25 +31,32 @@ impl Direction {
         Direction::West,
     ];
 
-    /*pub fn offset(&self) -> IVec2 {
-        match self {
-            Direction::North => ivec2(0, -1),
-            Direction::NorthEast => ivec2(1, -1),
-            Direction::East => ivec2(1, 0),
-            Direction::SouthEast => ivec2(1, 1),
-            Direction::South => ivec2(0, 1),
-            Direction::SouthWest => ivec2(-1, 1),
-            Direction::West => ivec2(-1, 0),
-            Direction::NorthWest => ivec2(-1, -1),
-        }
-    }*/
-
     const fn as_u32(self) -> u32 {
         self as u32
     }
 
     fn combine(list: &[Self]) -> u32 {
         list.iter().fold(0, |acc, layer| acc | layer.as_u32())
+    }
+
+    fn rotate_45(self, times: u8) -> Self {
+        let bits = self.as_u32();
+        let shift = (times % 8) as u32;
+
+        // Fem rotate left: els bits que surten per l'esquerra entren per la dreta
+        let new_bits = (bits << shift) | (bits >> (8 - shift));
+
+        match new_bits {
+            x if x == Direction::North.as_u32() => Direction::North,
+            x if x == Direction::NorthEast.as_u32() => Direction::NorthEast,
+            x if x == Direction::East.as_u32() => Direction::East,
+            x if x == Direction::SouthEast.as_u32() => Direction::SouthEast,
+            x if x == Direction::South.as_u32() => Direction::South,
+            x if x == Direction::SouthWest.as_u32() => Direction::SouthWest,
+            x if x == Direction::West.as_u32() => Direction::West,
+            x if x == Direction::NorthWest.as_u32() => Direction::NorthWest,
+            unknown => panic!("Something problematic happened processing rotate, we got {unknown}")
+        }
     }
 }
 
@@ -102,6 +109,11 @@ impl<T: Eq + Clone> Requirement<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn test_rotate() {
+        assert_eq!(Direction::North.rotate_45(1), Direction::NorthEast);
+        assert_eq!(Direction::West.rotate_45(4),Direction::East );
+    }
 
     #[test]
     fn test_matches_work() {

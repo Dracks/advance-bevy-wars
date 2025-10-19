@@ -97,11 +97,14 @@ impl BoardTrait<Terrain, UVec2> for Board {
             .iter()
             .filter_map(|dir| {
                 let neighbor_pos = match dir {
-                    Direction::North => uvec2(pos.x, pos.y.checked_sub(1)?),
-                    Direction::South => uvec2(pos.x, pos.y + 1),
+                    Direction::North => uvec2(pos.x, pos.y + 1),
+                    Direction::South => uvec2(pos.x, pos.y.checked_sub(1)?),
                     Direction::East => uvec2(pos.x + 1, pos.y),
                     Direction::West => uvec2(pos.x.checked_sub(1)?, pos.y),
-                    _ => return None,
+                    Direction::NorthEast => uvec2(pos.x + 1, pos.y + 1),
+                    Direction::NorthWest => uvec2(pos.x.checked_sub(1)?, pos.y + 1),
+                    Direction::SouthEast => uvec2(pos.x + 1, pos.y.checked_sub(1)?),
+                    Direction::SouthWest => uvec2(pos.x.checked_sub(1)?, pos.y.checked_sub(1)?),
                 };
                 self.get(&neighbor_pos)
                     .map(|terrain| Neighbor::new(*terrain, *dir))
