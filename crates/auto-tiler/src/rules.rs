@@ -1,3 +1,5 @@
+use std::{collections::HashSet, hash::Hash};
+
 use crate::board::Neighbor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -61,16 +63,16 @@ impl Direction {
 }
 
 pub struct Requirement<T> {
-    terrain: T,
+    terrains: HashSet<T>,
     mask: u32,
     not_mask: Option<u32>,
 }
 
-impl<T: Eq + Clone> Requirement<T> {
-    pub fn new(terrain: T, directions: &Vec<Direction>) -> Self {
+impl<T: Eq + Clone+Hash> Requirement<T> {
+    pub fn new(terrains: HashSet<T>, directions: &Vec<Direction>) -> Self {
         println!("Requirement {:?} = {}", directions, Direction::combine(directions));
         Self {
-            terrain,
+            terrains,
             mask: Direction::combine(directions),
             not_mask: None,
         }
@@ -90,7 +92,7 @@ impl<T: Eq + Clone> Requirement<T> {
     pub fn matches(&self, neighbors: &Vec<Neighbor<T>>) -> bool {
         let directions: Vec<_> = neighbors
             .iter()
-            .filter(|neighbor| neighbor.terrain == self.terrain)
+            .filter(|neighbor| self.terrains.contains(&neighbor.terrain))
             .map(|neighbor| neighbor.direction)
             .collect();
         let combination = Direction::combine(&directions);

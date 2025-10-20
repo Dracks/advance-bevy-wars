@@ -48,15 +48,15 @@ fn get_tiler(terrain: i32) -> AutoTiler<i32, char> {
     let mut auto_tiler = AutoTiler::default();
     // Tile 'a' - cap veí específic (per defecte)
     auto_tiler
-        .add_tile(TileDefinition::new('a', terrain).change_priority(-1))
+        .add_tile(TileDefinition::new_single_terrain('a', terrain).change_priority(-1))
         // Tile 'b' - requereix veí al Nord
         .add_tile(
-            TileDefinition::new('b', terrain)
+            TileDefinition::new_single_terrain('b', terrain)
                 .add_possible_requirements(vec![Requirement::new(4, &vec![Direction::South])]),
         )
         // Tile 'c' - requereix veí a l'Est
         .add_tile(
-            TileDefinition::new('c', terrain)
+            TileDefinition::new_single_terrain('c', terrain)
                 .add_possible_requirements(vec![Requirement::new(5, &vec![Direction::West])]),
         );
     auto_tiler

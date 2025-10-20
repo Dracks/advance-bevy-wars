@@ -1,3 +1,5 @@
+use std::{hash::Hash};
+
 use crate::{
     board::{BoardTrait, Neighbor},
     rules::{Direction, Requirement},
@@ -12,7 +14,7 @@ pub struct TileDefinition<T, I> {
 }
 
 
-impl<I: std::fmt::Debug, T: Eq + Clone +std::fmt::Debug> TileDefinition<T, I> {
+impl<I: std::fmt::Debug, T: Eq + Clone +std::fmt::Debug+Hash> TileDefinition<T, I> {
     pub fn new(tile: I, terrain: T) -> Self {
         Self {
             tile,
@@ -51,7 +53,7 @@ pub struct AutoTiler<T, I> {
     tiles: Vec<TileDefinition<T, I>>,
 }
 
-impl<T: Eq + Clone+std::fmt::Debug, I: Copy+std::fmt::Debug> AutoTiler<T, I> {
+impl<T: Eq + Clone+std::fmt::Debug+Hash, I: Copy+std::fmt::Debug> AutoTiler<T, I> {
     pub fn add_tile(&mut self, tile: TileDefinition<T, I>) -> &mut Self {
 
         let insert_at = match self.tiles.binary_search_by(|e| e.priority.cmp(&tile.priority)) {

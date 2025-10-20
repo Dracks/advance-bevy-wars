@@ -4,16 +4,17 @@ use rand::seq::IndexedRandom;
 
 use crate::{
     assets::FileAssets,
-    board::terrain::{Terrain, build_auto_tiler},
+    board::{samples::base_board, terrain::{build_auto_tiler, Terrain}},
 };
 
 pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Board::random(UVec2::splat(20)))
+        app.insert_resource(Board::random(uvec2(50, 30)))
             .insert_resource(Tiler(build_auto_tiler()))
             .add_systems(Startup, spawn_terrain);
+        app.insert_resource(base_board());
     }
 }
 
@@ -61,6 +62,8 @@ impl Board {
             Terrain::Plain,
             Terrain::Road,
             Terrain::Sea,
+            Terrain::Beach,
+            Terrain::Forest,
         ];
         let mut tiles = Vec::with_capacity(height);
         let mut rng = rand::rng();
