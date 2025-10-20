@@ -2,6 +2,7 @@ use crate::board::Board;
 
 #[allow(dead_code)]
 pub fn base_board() -> Board {
+    #[rustfmt::skip]
     let data = vec![
         vec!["p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p"],
         vec!["p", "s", "s", "B", "p", "r", "r", "r", "r", "r", "p", "p", "s", "s", "s", "p", "b", "b", "b", "p"],

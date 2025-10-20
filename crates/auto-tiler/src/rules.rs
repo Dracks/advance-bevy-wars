@@ -41,14 +41,15 @@ impl Direction {
         list.iter().fold(0, |acc, layer| acc | layer.as_u32())
     }
 
-    fn rotate_45(self, times: u8) -> Self {
+    pub fn rotate_45(self, times: u8) -> Self {
         let bits = self.as_u32();
         let shift = (times % 8) as u32;
 
         // Fem rotate left: els bits que surten per l'esquerra entren per la dreta
         let new_bits = (bits << shift) | (bits >> (8 - shift));
+        let moded = new_bits % (0b100000000);
 
-        match new_bits {
+        match moded {
             x if x == Direction::North.as_u32() => Direction::North,
             x if x == Direction::NorthEast.as_u32() => Direction::NorthEast,
             x if x == Direction::East.as_u32() => Direction::East,
@@ -57,7 +58,7 @@ impl Direction {
             x if x == Direction::SouthWest.as_u32() => Direction::SouthWest,
             x if x == Direction::West.as_u32() => Direction::West,
             x if x == Direction::NorthWest.as_u32() => Direction::NorthWest,
-            unknown => panic!("Something problematic happened processing rotate, we got {unknown}")
+            unknown => panic!("Something problematic happened processing rotate, we got {unknown}"),
         }
     }
 }
@@ -68,9 +69,13 @@ pub struct Requirement<T> {
     not_mask: Option<u32>,
 }
 
-impl<T: Eq + Clone+Hash> Requirement<T> {
+impl<T: Eq + Clone + Hash> Requirement<T> {
     pub fn new(terrains: HashSet<T>, directions: &Vec<Direction>) -> Self {
-        println!("Requirement {:?} = {}", directions, Direction::combine(directions));
+        println!(
+            "Requirement {:?} = {}",
+            directions,
+            Direction::combine(directions)
+        );
         Self {
             terrains,
             mask: Direction::combine(directions),
@@ -78,13 +83,17 @@ impl<T: Eq + Clone+Hash> Requirement<T> {
         }
     }
 
-    pub fn not_wanted(mut self, directions: &Vec<Direction>) -> Self {
+    pub fn not_wanted(mut self, directions: &[Direction]) -> Self {
         self.not_mask = Some(Direction::combine(directions));
         self
     }
 
-    pub fn not_wanted_adj(mut self) -> Self {
-        let adj = Direction::combine(&Direction::ADJACENT);
+    pub fn not_wanted_adj(self) -> Self {
+        self.not_wanted_comp(&Direction::ADJACENT)
+    }
+
+    pub fn not_wanted_comp(mut self, directions: &[Direction]) -> Self {
+        let adj = Direction::combine(directions);
         self.not_mask = Some(adj & !self.mask);
         self
     }
@@ -99,12 +108,10 @@ impl<T: Eq + Clone+Hash> Requirement<T> {
         let result = (combination & self.mask) == self.mask;
         let not_wanted = match self.not_mask {
             None => false,
-            Some(not_mask) => {
-                not_mask & combination > 0
-            }
+            Some(not_mask) => not_mask & combination > 0,
         };
         // println!("R matches: {combination} & {} ({}) = {} => {result} & {:?} => {not_wanted} ", self.mask, (combination&self.mask), self.mask, self.not_mask);
-        result && ! not_wanted
+        result && !not_wanted
     }
 }
 
@@ -112,14 +119,19 @@ impl<T: Eq + Clone+Hash> Requirement<T> {
 mod tests {
     use super::*;
 
+    #[test]
     fn test_rotate() {
         assert_eq!(Direction::North.rotate_45(1), Direction::NorthEast);
-        assert_eq!(Direction::West.rotate_45(4),Direction::East );
+        assert_eq!(Direction::West.rotate_45(4), Direction::East);
+        assert_eq!(Direction::West.rotate_45(8), Direction::West);
+        assert_eq!(Direction::West.rotate_45(12), Direction::East);
+        assert_eq!(Direction::West.rotate_45(1), Direction::NorthWest);
     }
 
     #[test]
     fn test_matches_work() {
-        let subject = Requirement::new(1, &vec![Direction::North, Direction::East]);
+        let subject =
+            Requirement::new(HashSet::from([1]), &vec![Direction::North, Direction::East]);
         let north_one = Neighbor::new(1, Direction::North);
         let south_one = Neighbor::new(1, Direction::South);
         let north_two = Neighbor::new(2, Direction::North);
@@ -139,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_no_directions() {
-        let subject = Requirement::new(1, &vec![]);
+        let subject = Requirement::new(HashSet::from([1]), &vec![]);
         let north_one = Neighbor::new(1, Direction::North);
         let south_one = Neighbor::new(1, Direction::South);
         let north_two = Neighbor::new(2, Direction::North);
@@ -151,7 +163,8 @@ mod tests {
 
     #[test]
     fn test_not_directions() {
-        let subject = Requirement::new(1, &vec![]).not_wanted(&vec![Direction::North, Direction::South]);
+        let subject = Requirement::new(HashSet::from([1]), &vec![])
+            .not_wanted(&vec![Direction::North, Direction::South]);
         let north_one = Neighbor::new(1, Direction::North);
         let south_one = Neighbor::new(1, Direction::South);
         let north_two = Neighbor::new(2, Direction::North);
@@ -163,7 +176,8 @@ mod tests {
 
     #[test]
     fn test_not_adj_computed() {
-        let subject = Requirement::new(1, &vec![Direction::South]).not_wanted_adj();
+        let subject =
+            Requirement::new(HashSet::from([1]), &vec![Direction::South]).not_wanted_adj();
         let north_one = Neighbor::new(1, Direction::North);
         let south_one = Neighbor::new(1, Direction::South);
         let north_two = Neighbor::new(2, Direction::North);

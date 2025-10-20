@@ -4,7 +4,10 @@ use rand::seq::IndexedRandom;
 
 use crate::{
     assets::FileAssets,
-    board::{samples::base_board, terrain::{build_auto_tiler, Terrain}},
+    board::{
+        samples::base_board,
+        terrain::{Terrain, build_auto_tiler},
+    },
 };
 
 pub struct BoardPlugin;

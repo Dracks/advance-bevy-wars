@@ -1,7 +1,16 @@
+use std::collections::HashSet;
 
 use ::auto_tiler::*;
 
-use bevy::math::{UVec2, uvec2};
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
+struct UVec2 {
+    pub x: u32,
+    pub y: u32,
+}
+
+fn uvec2(x: u32, y: u32) -> UVec2 {
+    UVec2 { x, y }
+}
 
 struct TestBoard {
     tiles: std::collections::HashMap<UVec2, i32>,
@@ -48,23 +57,26 @@ fn get_tiler(terrain: i32) -> AutoTiler<i32, char> {
     let mut auto_tiler = AutoTiler::default();
     // Tile 'a' - cap veí específic (per defecte)
     auto_tiler
-        .add_tile(TileDefinition::new_single_terrain('a', terrain).change_priority(-1))
+        .add_tile(TileDefinition::new('a', terrain).change_priority(-1))
         // Tile 'b' - requereix veí al Nord
         .add_tile(
-            TileDefinition::new_single_terrain('b', terrain)
-                .add_possible_requirements(vec![Requirement::new(4, &vec![Direction::South])]),
+            TileDefinition::new('b', terrain).add_possible_requirements(vec![Requirement::new(
+                HashSet::from([4]),
+                &vec![Direction::South],
+            )]),
         )
         // Tile 'c' - requereix veí a l'Est
         .add_tile(
-            TileDefinition::new_single_terrain('c', terrain)
-                .add_possible_requirements(vec![Requirement::new(5, &vec![Direction::West])]),
+            TileDefinition::new('c', terrain).add_possible_requirements(vec![Requirement::new(
+                HashSet::from([5]),
+                &vec![Direction::West],
+            )]),
         );
     auto_tiler
 }
 
 #[test]
 fn test_a_on_all_terrains() {
-
     #[rustfmt::skip]
     let grid = vec![
         vec![1, 1, 1],
@@ -76,7 +88,7 @@ fn test_a_on_all_terrains() {
 
     let tiler = get_tiler(1);
 
-    let mut result : Vec<(UVec2, Option<char>)> = Vec::default();
+    let mut result: Vec<(UVec2, Option<char>)> = Vec::default();
     for coord in board.tiles.keys() {
         result.push((coord.clone(), tiler.get_tile(&board, coord.clone())));
     }
@@ -97,12 +109,10 @@ fn test_1_way_handling() {
 
     let board = TestBoard::from_grid(grid);
 
-
     let tiler_0 = get_tiler(0);
     let none = tiler_0.get_tile(&board, uvec2(0, 0));
     assert!(none.is_some());
     assert_eq!(none.unwrap(), 'a');
-
 
     let tiler_1 = get_tiler(5);
     let n = tiler_1.get_tile(&board, uvec2(1, 1));

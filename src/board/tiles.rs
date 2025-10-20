@@ -1,6 +1,6 @@
+use crate::board::terrain::Terrain;
 use ::auto_tiler::*;
 use bevy::prelude::*;
-use crate::board::terrain::Terrain;
 /*
 fn add_wall_tiles(auto_tiler: &mut AutoTiler<Terrain, UVec2>, terrain: Terrain, offset: UVec2) {
     auto_tiler

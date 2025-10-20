@@ -357,9 +357,6 @@ dependencies = [
 [[package]]
 name = "auto-tiler"
 version = "0.1.0"
-dependencies = [
- "bevy",
-]
 
 [[package]]
 name = "autocfg"
