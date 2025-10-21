@@ -1,0 +1,24 @@
+@font-face {
+    font-family: "editundo";
+    src: url("fonts/editundo.ttf");
+}
+
+
+:root {
+    font-family: "editundo";
+
+    color: #fff;
+    position: absolute;
+}
+
+#score {
+    top: 12px;
+    right: 12px;
+}
+
+#tile-info {
+    left: 12px;
+    bottom: 12px;
+    border: 1px;
+    border-color: #ccc;
+}

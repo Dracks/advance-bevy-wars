@@ -7,7 +7,6 @@ impl Plugin for AnimationPlugin {
     }
 }
 
-
 #[derive(Component)]
 pub struct AnimationIndices {
     first: usize,
@@ -16,10 +15,7 @@ pub struct AnimationIndices {
 
 impl AnimationIndices {
     pub fn new(first: usize, last: usize) -> Self {
-        Self {
-            first,
-            last
-        }
+        Self { first, last }
     }
 }
 

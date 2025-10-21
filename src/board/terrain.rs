@@ -39,14 +39,14 @@ fn calculate(
     offset: &UVec2,
     tiles: &[UVec2],
     directions: &[Direction],
-    not_wanted_reference: &[Direction]
+    not_wanted_reference: &[Direction],
 ) {
     for (quarter, tile) in tiles.iter().map(|x| x + offset).enumerate() {
         let rotation = (quarter * 2) as u8;
         let dirs: Vec<_> = directions.iter().map(|d| d.rotate_45(rotation)).collect();
         auto_tiler.add_tile(
             TileDefinition::new(tile, terrain).add_possible_requirements(vec![
-                Requirement::new(neighbors.clone(), &dirs).not_wanted_comp(&not_wanted_reference)
+                Requirement::new(neighbors.clone(), &dirs).not_wanted_comp(&not_wanted_reference),
             ]),
         );
     }
@@ -64,7 +64,19 @@ fn add_std_tiles(
     };
     auto_tiler.add_tile(
         TileDefinition::new(uvec2(3, 3) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![]).not_wanted_adj(),
+            Requirement::new(neighbors.clone(), &[]).not_wanted_adj(),
+        ]),
+    );
+
+    auto_tiler.add_tile(
+        TileDefinition::new(uvec2(1, 1) + offset, terrain)
+            .add_possible_requirements(vec![Requirement::new(neighbors.clone(), &Direction::ALL)]),
+    );
+
+    auto_tiler.add_tile(
+        TileDefinition::new(uvec2(10, 3) + offset, terrain).add_possible_requirements(vec![
+            Requirement::new(neighbors.clone(), &Direction::ADJACENT)
+                .not_wanted_comp(&Direction::ALL),
         ]),
     );
 
@@ -74,9 +86,10 @@ fn add_std_tiles(
         terrain,
         &neighbors,
         &offset,
-        &[uvec2(3,2), uvec2(0,3), uvec2(3,0), uvec2(2,3)],
+        &[uvec2(3, 2), uvec2(0, 3), uvec2(3, 0), uvec2(2, 3)],
         &[Direction::North],
-        &Direction::ADJACENT);
+        &Direction::ADJACENT,
+    );
 
     // corner of lake
     calculate(
@@ -86,7 +99,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(0, 0), uvec2(2, 0), uvec2(2, 2), uvec2(0, 2)],
         &[Direction::South, Direction::SouthEast, Direction::East],
-        &Direction::ALL
+        &Direction::ALL,
     );
 
     // border of lake
@@ -95,9 +108,15 @@ fn add_std_tiles(
         terrain,
         &neighbors,
         &offset,
-        &[uvec2(1, 0), uvec2(2, 1), uvec2(1, 3), uvec2(0, 1)],
-        &[Direction::South, Direction::East, Direction::West, Direction::SouthEast, Direction::SouthWest],
-        &Direction::ALL
+        &[uvec2(1, 0), uvec2(2, 1), uvec2(1, 2), uvec2(0, 1)],
+        &[
+            Direction::South,
+            Direction::East,
+            Direction::West,
+            Direction::SouthEast,
+            Direction::SouthWest,
+        ],
+        &Direction::ADJACENT,
     );
 
     // Simple Corner
@@ -108,17 +127,26 @@ fn add_std_tiles(
         &offset,
         &[uvec2(4, 2), uvec2(5, 2), uvec2(5, 3), uvec2(4, 3)],
         &[Direction::South, Direction::East],
-        &Direction::ADJACENT
+        &Direction::ADJACENT,
     );
 
-    // simple straig forward
-    for (half, tile) in [uvec2(3,1), uvec2(1,3)].iter().map(|x| x+offset).enumerate() {
-        let rotation = (half*2) as u8;
-        let directions : Vec<_> = [Direction::North, Direction::South].iter().map(|x| x.rotate_45(rotation)).collect();
-        println!("Checking life {rotation} {:?}", directions);
-        auto_tiler.add_tile(TileDefinition::new(tile, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &directions).not_wanted_adj()
-        ]));
+    // simple straight forward
+    for (half, tile) in [uvec2(3, 1), uvec2(1, 3)]
+        .iter()
+        .map(|x| x + offset)
+        .enumerate()
+    {
+        let rotation = (half * 2) as u8;
+        let directions: Vec<_> = [Direction::North, Direction::South]
+            .iter()
+            .map(|x| x.rotate_45(rotation))
+            .collect();
+        auto_tiler.add_tile(
+            TileDefinition::new(tile, terrain).add_possible_requirements(vec![
+                Requirement::new(neighbors.clone(), &directions)
+                    .not_wanted_comp(&Direction::ADJACENT),
+            ]),
+        );
     }
 
     // 3 ways
@@ -127,11 +155,29 @@ fn add_std_tiles(
         terrain,
         &neighbors,
         &offset,
-        &[uvec2(6, 1), uvec2(9, 0), uvec2(7, 1), uvec2(9,1)],
+        &[uvec2(6, 1), uvec2(9, 0), uvec2(7, 1), uvec2(9, 1)],
         &[Direction::South, Direction::East, Direction::North],
-        &Direction::ALL
+        &Direction::ALL,
     );
 
+    // All Except one corner
+    calculate(
+        auto_tiler,
+        terrain,
+        &neighbors,
+        &offset,
+        &[uvec2(5, 0), uvec2(5, 1), uvec2(4, 1), uvec2(4, 0)],
+        &[
+            Direction::North,
+            Direction::NorthEast,
+            Direction::East,
+            Direction::SouthEast,
+            Direction::South,
+            Direction::West,
+            Direction::NorthWest,
+        ],
+        &Direction::ALL,
+    )
 
     /*auto_tiler
     .add_tile(

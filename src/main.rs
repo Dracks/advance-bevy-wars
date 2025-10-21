@@ -1,14 +1,12 @@
 use bevy::{prelude::*, ui::UiPlugin};
 use bevy_flair::FlairPlugin;
 
+mod animations;
 mod assets;
 mod board;
 mod ui;
-mod animations;
 
-use crate::{
-    board::{Board, BoardPlugin},
-};
+use crate::board::{Board, BoardPlugin};
 
 fn main() {
     let mut app = App::new();
@@ -22,9 +20,12 @@ fn main() {
         }),
         FlairPlugin,
     ))
-    .add_plugins((BoardPlugin, crate::ui::UiPlugin, crate::animations::AnimationPlugin))
-    .add_systems(Startup, setup)
-    ;
+    .add_plugins((
+        BoardPlugin,
+        crate::ui::UiPlugin,
+        crate::animations::AnimationPlugin,
+    ))
+    .add_systems(Startup, setup);
 
     app.run();
 }

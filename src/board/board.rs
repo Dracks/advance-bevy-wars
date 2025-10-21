@@ -127,7 +127,6 @@ impl From<Vec<Vec<&str>>> for Board {
         assert!(width > 0, "The value must contain data (Width = 0)");
         let mut tiles = Vec::with_capacity(height);
         for y in 0..height {
-            bevy::log::info!("Transforming y {y}");
             let row = value[y].clone();
             assert_eq!(row.len(), width, "Row {y} has an invalid width");
             tiles.push(row.iter().map(|text| Terrain::from(*text)).collect());

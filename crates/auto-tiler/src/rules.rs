@@ -70,12 +70,7 @@ pub struct Requirement<T> {
 }
 
 impl<T: Eq + Clone + Hash> Requirement<T> {
-    pub fn new(terrains: HashSet<T>, directions: &Vec<Direction>) -> Self {
-        println!(
-            "Requirement {:?} = {}",
-            directions,
-            Direction::combine(directions)
-        );
+    pub fn new(terrains: HashSet<T>, directions: &[Direction]) -> Self {
         Self {
             terrains,
             mask: Direction::combine(directions),
