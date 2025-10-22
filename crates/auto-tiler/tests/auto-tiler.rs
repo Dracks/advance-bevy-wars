@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use ::auto_tiler::*;
+use ::auto_tiler::direction::AdjacentDirection;
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 struct UVec2 {
@@ -28,21 +29,20 @@ impl TestBoard {
     }
 }
 
-impl BoardTrait<i32, UVec2> for TestBoard {
+impl BoardTrait<i32, UVec2, AdjacentDirection> for TestBoard {
     fn get(&self, pos: &UVec2) -> Option<&i32> {
         self.tiles.get(pos)
     }
 
-    fn get_neighbors(&self, pos: &UVec2, directions: &[Direction]) -> Vec<Neighbor<i32>> {
+    fn get_neighbors(&self, pos: &UVec2, directions: &[AdjacentDirection]) -> Vec<Neighbor<i32, AdjacentDirection>> {
         let neighbors = directions
             .iter()
             .filter_map(|dir| {
                 let neighbor_pos = match dir {
-                    Direction::North => uvec2(pos.x, pos.y.checked_sub(1)?),
-                    Direction::South => uvec2(pos.x, pos.y + 1),
-                    Direction::East => uvec2(pos.x + 1, pos.y),
-                    Direction::West => uvec2(pos.x.checked_sub(1)?, pos.y),
-                    _ => return None,
+                    AdjacentDirection::North => uvec2(pos.x, pos.y.checked_sub(1)?),
+                    AdjacentDirection::South => uvec2(pos.x, pos.y + 1),
+                    AdjacentDirection::East => uvec2(pos.x + 1, pos.y),
+                    AdjacentDirection::West => uvec2(pos.x.checked_sub(1)?, pos.y),
                 };
                 self.get(&neighbor_pos)
                     .map(|terrain| Neighbor::new(*terrain, *dir))
@@ -57,19 +57,19 @@ fn get_tiler(terrain: i32) -> AutoTiler<i32, char> {
     let mut auto_tiler = AutoTiler::default();
     // Tile 'a' - cap veí específic (per defecte)
     auto_tiler
-        .add_tile(TileDefinition::new('a', terrain).change_priority(-1))
+        .add_tile(TileDefinition::new('a', terrain).change_priority(1))
         // Tile 'b' - requereix veí al Nord
         .add_tile(
             TileDefinition::new('b', terrain).add_possible_requirements(vec![Requirement::new(
                 HashSet::from([4]),
-                &vec![Direction::South],
+                &vec![AdjacentDirection::South],
             )]),
         )
         // Tile 'c' - requereix veí a l'Est
         .add_tile(
             TileDefinition::new('c', terrain).add_possible_requirements(vec![Requirement::new(
                 HashSet::from([5]),
-                &vec![Direction::West],
+                &vec![AdjacentDirection::West],
             )]),
         );
     auto_tiler
@@ -120,7 +120,7 @@ fn test_1_way_handling() {
     assert_eq!(n.unwrap(), 'b');
 
     let tiler_3 = get_tiler(3);
-    let e = tiler_3.get_tile(&board, uvec2(1, 2));
+    let e = tiler_3.get_tile(&board, uvec2(2, 1));
     assert!(e.is_some());
     assert_eq!(e.unwrap(), 'c');
 }

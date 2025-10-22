@@ -3,7 +3,6 @@ use bevy::{
     render::render_resource::Extent3d,
     sprite_render::{TileData, TilemapChunk, TilemapChunkTileData},
 };
-use bevy_flair::FlairPlugin;
 use rand::Rng;
 
 fn main() {
@@ -16,7 +15,6 @@ fn main() {
             }),
             ..default()
         }),
-        FlairPlugin,
     ))
     .add_systems(Startup, setup)
     .add_systems(Update, update_tileset_image);

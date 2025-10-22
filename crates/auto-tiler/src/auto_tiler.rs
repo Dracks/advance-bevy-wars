@@ -2,7 +2,7 @@ use std::hash::Hash;
 
 use crate::{
     board::{BoardTrait, Neighbor},
-    rules::{Direction, Requirement},
+    rules::{AsMask, Requirement},
 };
 
 pub struct TileDefinition<T, I> {
@@ -33,7 +33,7 @@ impl<I: std::fmt::Debug, T: Eq + Clone + std::fmt::Debug + Hash> TileDefinition<
         self
     }
 
-    pub fn matches(&self, neighbors: &Vec<Neighbor<T>>) -> bool {
+    pub fn matches<D: AsMask>(&self, neighbors: &Vec<Neighbor<T, D>>) -> bool {
         if self.rules.len() == 0 {
             return true;
         }
@@ -64,16 +64,20 @@ impl<T: Eq + Clone + std::fmt::Debug + Hash, I: Copy + std::fmt::Debug> AutoTile
         self
     }
 
-    pub fn get_tile<P>(&self, board: &impl BoardTrait<T, P>, pos: P) -> Option<I> {
+    pub fn get_tile<P, D: AsMask>(&self, board: &impl BoardTrait<T, P, D>, pos: P) -> Option<I> {
         let Some(terrain) = board.get(&pos) else {
             return None;
         };
-        let neighbors = board.get_neighbors(&pos, Direction::ALL.as_slice());
+        let neighbors = board.get_neighbors(&pos, D::ALL.iter().as_slice());
         let tile = self
             .tiles
             .iter()
             .filter(|tile| tile.terrain == *terrain)
             .find(|tile| tile.matches(&neighbors));
         tile.map(|t| t.tile)
+    }
+
+    pub fn get_defined_tiles(&self) -> Vec<I> {
+        self.tiles.iter().map(|definition| definition.tile).collect()
     }
 }

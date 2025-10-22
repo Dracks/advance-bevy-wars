@@ -1,7 +1,9 @@
 use std::collections::HashSet;
 
-use auto_tiler::{AutoTiler, Direction, Requirement, TileDefinition};
+use auto_tiler::{AsMask, AutoTiler, Requirement, TileDefinition};
 use bevy::math::{UVec2, uvec2};
+
+use crate::board::board::Direction;
 
 #[derive(Debug, Eq, Clone, Copy, PartialEq, Default, PartialOrd, Hash)]
 pub enum Terrain {
@@ -64,7 +66,7 @@ fn add_std_tiles(
     };
     auto_tiler.add_tile(
         TileDefinition::new(uvec2(3, 3) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &[]).not_wanted_adj(),
+            Requirement::new::<Direction>(neighbors.clone(), &[]).not_wanted(&Direction::ADJACENT),
         ]),
     );
 
@@ -76,7 +78,7 @@ fn add_std_tiles(
     auto_tiler.add_tile(
         TileDefinition::new(uvec2(10, 3) + offset, terrain).add_possible_requirements(vec![
             Requirement::new(neighbors.clone(), &Direction::ADJACENT)
-                .not_wanted_comp(&Direction::ALL),
+                .not_wanted_comp(Direction::ALL),
         ]),
     );
 
@@ -178,88 +180,61 @@ fn add_std_tiles(
         ],
         &Direction::ALL,
     )
+}
 
-    /*auto_tiler
-    .add_tile(
-        TileDefinition::new(uvec2(0, 0) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(
-                neighbors.clone(),
-                &vec![Direction::East, Direction::South, Direction::SouthEast],
-            ).not_wanted_adj(),
+fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>){
+    let terrain = Terrain::Mountain;
+    let neighbors = HashSet::from([terrain]);
+    auto_tiler.add_tile(
+        TileDefinition::new(uvec2(2, 25), terrain).add_possible_requirements(vec![
+            Requirement::new_single::<Direction>(terrain, &[]).not_wanted(&Direction::ADJACENT),
         ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(0, 1) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(
-                neighbors.clone(),
-                &vec![Direction::North, Direction::South, Direction::East],
-            ).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(0, 2) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(
-                neighbors.clone(),
-                &vec![Direction::East, Direction::North, Direction::NorthEast],
-            ).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(3, 1) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::North, Direction::South]).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(1, 3) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::East, Direction::West]).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(3, 0) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::South]).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(3, 2) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::North]).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(0, 3) + offset, terrain)
-            .add_possible_requirements(vec![Requirement::new(neighbors.clone(), &vec![Direction::East]).not_wanted_adj()]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(2, 4) + offset, terrain)
-            .add_possible_requirements(vec![Requirement::new(neighbors.clone(), &vec![Direction::West]).not_wanted_adj()]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(4, 2) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::East, Direction::South]).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(5, 2) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::West, Direction::South]).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(4, 3) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::East, Direction::North]).not_wanted_adj(),
-        ]),
-    )
-    .add_tile(
-        TileDefinition::new(uvec2(5, 3) + offset, terrain).add_possible_requirements(vec![
-            Requirement::new(neighbors.clone(), &vec![Direction::West, Direction::North]).not_wanted_adj(),
-        ]),
-    )
-    */
+    );
+
+    auto_tiler.add_tile(
+        TileDefinition::new(uvec2(12, 22) , terrain)
+            .add_possible_requirements(vec![Requirement::new_single(terrain, &Direction::ALL)]),
+    );
+
+    // corner of mountain
+    calculate(
+        auto_tiler,
+        terrain,
+        &neighbors,
+        &UVec2::ZERO,
+        &[uvec2(11, 21), uvec2(13, 21), uvec2(13, 23), uvec2(11, 23)],
+        &[Direction::South, Direction::SouthEast, Direction::East],
+        &Direction::ADJACENT,
+    );
+
+    // Sides of the mountain
+    calculate(
+        auto_tiler,
+        terrain,
+        &neighbors,
+        &UVec2::ZERO,
+        &[uvec2(12, 21), uvec2(13, 22), uvec2(12, 23), uvec2(11, 22)],
+        &[Direction::South, Direction::West, Direction::East],
+        &Direction::ADJACENT,
+    );
+
+    // Only one side
+    calculate(
+        auto_tiler,
+        terrain,
+        &neighbors,
+        &UVec2::ZERO,
+        &[uvec2(0, 23), uvec2(3, 21), uvec2(0, 24), uvec2(0, 21)],
+        &[Direction::South],
+        &Direction::ADJACENT,
+    );
 }
 
 pub fn build_auto_tiler() -> AutoTiler<Terrain, UVec2> {
     let mut auto_tiler = AutoTiler::default();
     auto_tiler.add_tile(
         TileDefinition::new(uvec2(0, 15), Terrain::Plain)
-            .add_possible_requirements(vec![Requirement::new(HashSet::new(), &vec![])]),
+            .add_possible_requirements(vec![Requirement::new::<Direction>(HashSet::new(), &[])]),
     );
     add_std_tiles(&mut auto_tiler, Terrain::Road, UVec2::ZERO, None);
     add_std_tiles(
@@ -274,6 +249,8 @@ pub fn build_auto_tiler() -> AutoTiler<Terrain, UVec2> {
         uvec2(0, 10),
         Some(vec![Terrain::Sea, Terrain::Beach]),
     );
+
+    add_mountain(&mut auto_tiler);
 
     auto_tiler
 }

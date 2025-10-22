@@ -1,4 +1,4 @@
-use auto_tiler::{AutoTiler, BoardTrait, Direction, Neighbor};
+use auto_tiler::{AsMask, AutoTiler, BoardTrait, Neighbor};
 use bevy::prelude::*;
 use rand::seq::IndexedRandom;
 
@@ -9,6 +9,67 @@ use crate::{
         terrain::{Terrain, build_auto_tiler},
     },
 };
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Direction {
+    North = 0b00000001,
+    NorthEast = 0b00000010,
+    East = 0b00000100,
+    SouthEast = 0b00001000,
+    South = 0b00010000,
+    SouthWest = 0b00100000,
+    West = 0b01000000,
+    NorthWest = 0b10000000,
+}
+
+impl Direction {
+
+    pub const ADJACENT: [Direction; 4] = [
+        Direction::North,
+        Direction::East,
+        Direction::South,
+        Direction::West,
+    ];
+
+    pub fn rotate_45(self, times: u8) -> Self {
+        let bits = self.as_mask();
+        let shift = (times % 8) as u32;
+
+        // Fem rotate left: els bits que surten per l'esquerra entren per la dreta
+        let new_bits = (bits << shift) | (bits >> (8 - shift));
+        let moded = new_bits % (0b100000000);
+
+        match moded {
+            x if x == Direction::North.as_mask() => Direction::North,
+            x if x == Direction::NorthEast.as_mask() => Direction::NorthEast,
+            x if x == Direction::East.as_mask() => Direction::East,
+            x if x == Direction::SouthEast.as_mask() => Direction::SouthEast,
+            x if x == Direction::South.as_mask() => Direction::South,
+            x if x == Direction::SouthWest.as_mask() => Direction::SouthWest,
+            x if x == Direction::West.as_mask() => Direction::West,
+            x if x == Direction::NorthWest.as_mask() => Direction::NorthWest,
+            unknown => panic!("Something problematic happened processing rotate, we got {unknown}"),
+        }
+    }
+}
+
+impl AsMask for Direction {
+    fn as_mask(self) -> u32 {
+        self as u32
+    }
+
+    const ALL: &'static [Self] = &[
+        Direction::North,
+        Direction::NorthEast,
+        Direction::East,
+        Direction::SouthEast,
+        Direction::South,
+        Direction::SouthWest,
+        Direction::West,
+        Direction::NorthWest,
+    ];
+}
 
 pub struct BoardPlugin;
 
@@ -88,7 +149,7 @@ impl Board {
     }
 }
 
-impl BoardTrait<Terrain, UVec2> for Board {
+impl BoardTrait<Terrain, UVec2, Direction> for Board {
     fn get(&self, pos: &UVec2) -> Option<&Terrain> {
         let x = pos.x as usize;
         let y = pos.y as usize;
@@ -98,7 +159,7 @@ impl BoardTrait<Terrain, UVec2> for Board {
         Some(&self.tiles[pos.y as usize][pos.x as usize])
     }
 
-    fn get_neighbors(&self, pos: &UVec2, directions: &[Direction]) -> Vec<Neighbor<Terrain>> {
+    fn get_neighbors(&self, pos: &UVec2, directions: &[Direction]) -> Vec<Neighbor<Terrain, Direction>> {
         directions
             .iter()
             .filter_map(|dir| {
@@ -183,7 +244,7 @@ fn spawn_terrain(
         .spawn((Transform::IDENTITY, Visibility::Inherited, MainBoard))
         .with_children(|parent| {
             for pos in board.get_all() {
-                if let Some(tile_coords) = auto_tiler.get_tile::<UVec2>(&*board, pos) {
+                if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(&*board, pos) {
                     parent.spawn((
                         Sprite::from_atlas_image(
                             texture_handle.clone(),
@@ -201,4 +262,18 @@ fn spawn_terrain(
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rotate() {
+        assert_eq!(Direction::North.rotate_45(1), Direction::NorthEast);
+        assert_eq!(Direction::West.rotate_45(4), Direction::East);
+        assert_eq!(Direction::West.rotate_45(8), Direction::West);
+        assert_eq!(Direction::West.rotate_45(12), Direction::East);
+        assert_eq!(Direction::West.rotate_45(1), Direction::NorthWest);
+    }
 }
