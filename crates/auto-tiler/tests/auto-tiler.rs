@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use ::auto_tiler::*;
 use ::auto_tiler::direction::AdjacentDirection;
+use ::auto_tiler::*;
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 struct UVec2 {
@@ -34,7 +34,11 @@ impl BoardTrait<i32, UVec2, AdjacentDirection> for TestBoard {
         self.tiles.get(pos)
     }
 
-    fn get_neighbors(&self, pos: &UVec2, directions: &[AdjacentDirection]) -> Vec<Neighbor<i32, AdjacentDirection>> {
+    fn get_neighbors(
+        &self,
+        pos: &UVec2,
+        directions: &[AdjacentDirection],
+    ) -> Vec<Neighbor<i32, AdjacentDirection>> {
         let neighbors = directions
             .iter()
             .filter_map(|dir| {

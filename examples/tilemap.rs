@@ -7,17 +7,15 @@ use rand::Rng;
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins((
-        DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Advance Bevy Wars".into(),
-                ..default()
-            }),
+    app.add_plugins((DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Advance Bevy Wars".into(),
             ..default()
         }),
-    ))
-    .add_systems(Startup, setup)
-    .add_systems(Update, update_tileset_image);
+        ..default()
+    }),))
+        .add_systems(Startup, setup)
+        .add_systems(Update, update_tileset_image);
 
     app.run();
 }

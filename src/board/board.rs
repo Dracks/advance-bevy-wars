@@ -10,7 +10,6 @@ use crate::{
     },
 };
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {
     North = 0b00000001,
@@ -24,7 +23,6 @@ pub enum Direction {
 }
 
 impl Direction {
-
     pub const ADJACENT: [Direction; 4] = [
         Direction::North,
         Direction::East,
@@ -159,7 +157,11 @@ impl BoardTrait<Terrain, UVec2, Direction> for Board {
         Some(&self.tiles[pos.y as usize][pos.x as usize])
     }
 
-    fn get_neighbors(&self, pos: &UVec2, directions: &[Direction]) -> Vec<Neighbor<Terrain, Direction>> {
+    fn get_neighbors(
+        &self,
+        pos: &UVec2,
+        directions: &[Direction],
+    ) -> Vec<Neighbor<Terrain, Direction>> {
         directions
             .iter()
             .filter_map(|dir| {

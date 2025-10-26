@@ -78,6 +78,9 @@ impl<T: Eq + Clone + std::fmt::Debug + Hash, I: Copy + std::fmt::Debug> AutoTile
     }
 
     pub fn get_defined_tiles(&self) -> Vec<I> {
-        self.tiles.iter().map(|definition| definition.tile).collect()
+        self.tiles
+            .iter()
+            .map(|definition| definition.tile)
+            .collect()
     }
 }

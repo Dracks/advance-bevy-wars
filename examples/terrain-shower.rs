@@ -31,8 +31,9 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     commands.spawn((Camera2d, Transform::default()));
-    commands.spawn((Transform::default(), Visibility::Visible, Board))
-        .with_children(|parent|{
+    commands
+        .spawn((Transform::default(), Visibility::Visible, Board))
+        .with_children(|parent| {
             parent.spawn((
                 Sprite::from_image(assets.load("images/game/terrain.png")),
                 Transform::default(),
@@ -58,12 +59,13 @@ fn setup(
                     };
 
                     parent.spawn((
-                        Mesh2d(meshes
-                            .add(Rectangle::new(TILE_SIZE, TILE_SIZE))
-                            .into()),
+                        Mesh2d(meshes.add(Rectangle::new(TILE_SIZE, TILE_SIZE)).into()),
                         MeshMaterial2d(materials.add(color)),
                         Transform::from_xyz(pos_x, pos_y, 0.0),
-                        GridTile { x, y: GRID_HEIGHT-y-1 },
+                        GridTile {
+                            x,
+                            y: GRID_HEIGHT - y - 1,
+                        },
                     ));
                 }
             }
@@ -99,10 +101,10 @@ fn setup(
         TextColor::WHITE,
         TextFont::from_font_size(24.0),
         CoordinateText,
-        Node{
+        Node {
             top: Val::Px(10.),
             ..Default::default()
-        }
+        },
     ));
 }
 
@@ -166,16 +168,16 @@ fn basic_camera(
         transform.y += 1.0
     }
 
-    if keyboard_input.any_pressed([KeyCode::KeyR]){
+    if keyboard_input.any_pressed([KeyCode::KeyR]) {
         input_scale = 1.0
     }
-    if keyboard_input.any_pressed([KeyCode::KeyF]){
+    if keyboard_input.any_pressed([KeyCode::KeyF]) {
         input_scale -= 1.0
     }
 
-    transform = transform * time.delta_secs()*100.0;
-    let scale = powf(2.0,  input_scale*time.delta_secs());
+    transform = transform * time.delta_secs() * 100.0;
+    let scale = powf(2.0, input_scale * time.delta_secs());
 
     board.translation += vec3(transform.x, transform.y, 0.0);
-    board.scale = vec3(board.scale.x * scale, board.scale.y*scale, 1.0);
+    board.scale = vec3(board.scale.x * scale, board.scale.y * scale, 1.0);
 }

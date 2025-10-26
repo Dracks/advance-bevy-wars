@@ -1,14 +1,19 @@
-use std::{collections::{HashMap, HashSet}, hash::Hash};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+};
 
 use crate::board::Neighbor;
-pub trait AsMask:Copy where Self: 'static {
+pub trait AsMask: Copy
+where
+    Self: 'static,
+{
     const ALL: &'static [Self];
     fn as_mask(self) -> u32;
     fn combine(list: &[impl AsMask]) -> u32 {
         list.iter().fold(0, |acc, layer| acc | layer.as_mask())
     }
 }
-
 
 pub struct Requirement<T> {
     terrains: HashSet<T>,
@@ -31,7 +36,11 @@ impl<T: Eq + Clone + Hash> Requirement<T> {
 
     pub fn not_wanted<D: AsMask>(mut self, directions: &[D]) -> Self {
         let not_mask = D::combine(directions);
-        assert_eq!(not_mask & self.mask, 0, "Not wanted directions cannot contain a required direction");
+        assert_eq!(
+            not_mask & self.mask,
+            0,
+            "Not wanted directions cannot contain a required direction"
+        );
         self.not_mask = Some(not_mask);
         self
     }
@@ -67,8 +76,10 @@ mod tests {
 
     #[test]
     fn test_matches_work() {
-        let subject =
-            Requirement::new(HashSet::from([1]), &vec![AdjacentDirection::North, AdjacentDirection::East]);
+        let subject = Requirement::new(
+            HashSet::from([1]),
+            &vec![AdjacentDirection::North, AdjacentDirection::East],
+        );
         let north_one = Neighbor::new(1, AdjacentDirection::North);
         let south_one = Neighbor::new(1, AdjacentDirection::South);
         let north_two = Neighbor::new(2, AdjacentDirection::North);
@@ -113,8 +124,8 @@ mod tests {
 
     #[test]
     fn test_not_adj_computed() {
-        let subject =
-            Requirement::new(HashSet::from([1]), &[AdjacentDirection::South]).not_wanted_comp(AdjacentDirection::ALL);
+        let subject = Requirement::new(HashSet::from([1]), &[AdjacentDirection::South])
+            .not_wanted_comp(AdjacentDirection::ALL);
         let north_one = Neighbor::new(1, AdjacentDirection::North);
         let south_one = Neighbor::new(1, AdjacentDirection::South);
         let north_two = Neighbor::new(2, AdjacentDirection::North);

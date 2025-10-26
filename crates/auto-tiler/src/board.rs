@@ -1,4 +1,4 @@
-use crate:: AsMask;
+use crate::AsMask;
 
 #[derive(Clone, Debug)]
 pub struct Neighbor<T: Clone, D: AsMask> {

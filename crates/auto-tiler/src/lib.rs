@@ -9,7 +9,6 @@ pub use crate::rules::*;
 pub mod direction {
     use crate::AsMask;
 
-
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum AdjacentDirection {
         North = 0b00000001,
@@ -17,7 +16,6 @@ pub mod direction {
         South = 0b00000100,
         West = 0b00001000,
     }
-
 
     impl AsMask for AdjacentDirection {
         fn as_mask(self) -> u32 {
