@@ -35,6 +35,11 @@ impl From<&str> for Terrain {
     }
 }
 
+enum NotWanted<'a> {
+    computed(&'a [Direction]),
+    rotated(&'a [Direction]),
+}
+
 fn calculate(
     auto_tiler: &mut AutoTiler<Terrain, UVec2>,
     terrain: Terrain,
@@ -42,15 +47,22 @@ fn calculate(
     offset: &UVec2,
     tiles: &[UVec2],
     directions: &[Direction],
-    not_wanted_reference: &[Direction],
+    not_wanted_reference: &NotWanted,
 ) {
     for (quarter, tile) in tiles.iter().map(|x| x + offset).enumerate() {
         let rotation = (quarter * 2) as u8;
         let dirs: Vec<_> = directions.iter().map(|d| d.rotate_45(rotation)).collect();
-        let not_wanted_rotate: Vec<_> = not_wanted_reference.iter().map(|d| d.rotate_45(rotation)).collect();
+        let mut requirement = Requirement::new(neighbors.clone(), &dirs);
+        match not_wanted_reference {
+            NotWanted::computed(directions) => requirement = requirement.not_wanted_comp(directions),
+            NotWanted::rotated(directions) => {
+                let rotate_directions: Vec<_> = directions.iter().map(|d| d.rotate_45(rotation)).collect();
+                requirement = requirement.not_wanted(&rotate_directions)
+            }
+        };
         auto_tiler.add_tile(
             TileDefinition::new(tile, terrain).add_possible_requirements(vec![
-                Requirement::new(neighbors.clone(), &dirs).not_wanted_comp(&not_wanted_rotate),
+                requirement,
             ]),
         );
     }
@@ -92,7 +104,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(3, 2), uvec2(0, 3), uvec2(3, 0), uvec2(2, 3)],
         &[Direction::North],
-        &Direction::ADJACENT,
+        &NotWanted::computed(&Direction::ADJACENT),
     );
 
     // corner of lake
@@ -103,7 +115,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(0, 0), uvec2(2, 0), uvec2(2, 2), uvec2(0, 2)],
         &[Direction::South, Direction::SouthEast, Direction::East],
-        &Direction::ADJACENT,
+        &NotWanted::rotated(&[Direction::North, Direction::West]),
     );
 
     // border of lake
@@ -120,7 +132,7 @@ fn add_std_tiles(
             Direction::SouthEast,
             Direction::SouthWest,
         ],
-        &Direction::ADJACENT,
+        &NotWanted::computed(&Direction::ADJACENT),
     );
 
     // Simple Corner
@@ -131,7 +143,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(4, 2), uvec2(5, 2), uvec2(5, 3), uvec2(4, 3)],
         &[Direction::South, Direction::East],
-        &[Direction::North, Direction::West, Direction::SouthEast],
+        &NotWanted::rotated(&[Direction::North, Direction::West, Direction::SouthEast]),
     );
 
     // simple straight forward
@@ -161,7 +173,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(6, 1), uvec2(9, 0), uvec2(7, 1), uvec2(9, 1)],
         &[Direction::South, Direction::East, Direction::North],
-        &Direction::ALL,
+        &NotWanted::computed(&Direction::ALL),
     );
 
     // All Except one corner
@@ -180,7 +192,7 @@ fn add_std_tiles(
             Direction::West,
             Direction::NorthWest,
         ],
-        &Direction::ALL,
+        &NotWanted::computed(Direction::ALL),
     )
 }
 
@@ -206,7 +218,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>){
         &UVec2::ZERO,
         &[uvec2(11, 21), uvec2(13, 21), uvec2(13, 23), uvec2(11, 23)],
         &[Direction::South, Direction::SouthEast, Direction::East],
-        &Direction::ADJACENT,
+        &NotWanted::rotated(&[Direction::North, Direction::West]),
     );
 
     // Sides of the mountain
@@ -217,7 +229,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>){
         &UVec2::ZERO,
         &[uvec2(12, 21), uvec2(13, 22), uvec2(12, 23), uvec2(11, 22)],
         &[Direction::South, Direction::West, Direction::East],
-        &Direction::ADJACENT,
+        &NotWanted::rotated(&[Direction::North]),
     );
 
     // Only one side
@@ -228,7 +240,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>){
         &UVec2::ZERO,
         &[uvec2(0, 23), uvec2(3, 21), uvec2(0, 24), uvec2(0, 21)],
         &[Direction::South],
-        &Direction::ADJACENT,
+        &NotWanted::computed(&Direction::ADJACENT),
     );
 
     // Two straight forward
@@ -239,7 +251,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>){
         &UVec2::ZERO,
         &[uvec2(1, 21), uvec2(0, 24)],
         &[Direction::East, Direction::West],
-        &Direction::ADJACENT
+        &NotWanted::computed(&Direction::ADJACENT)
     );
 }
 
