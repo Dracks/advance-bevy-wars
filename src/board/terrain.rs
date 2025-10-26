@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use auto_tiler::{AsMask, AutoTiler, Requirement, TileDefinition};
-use bevy::math::{UVec2, uvec2};
+use bevy::{math::{uvec2, UVec2}};
 
 use crate::board::board::Direction;
 
@@ -29,6 +29,7 @@ impl From<&str> for Terrain {
             "b" => Terrain::Bridge,
             "B" => Terrain::Beach,
             "w" => Terrain::Wall,
+            "f" => Terrain::Forest,
             value => panic!("Value {value} unsupported"),
         }
     }
@@ -46,9 +47,10 @@ fn calculate(
     for (quarter, tile) in tiles.iter().map(|x| x + offset).enumerate() {
         let rotation = (quarter * 2) as u8;
         let dirs: Vec<_> = directions.iter().map(|d| d.rotate_45(rotation)).collect();
+        let not_wanted_rotate: Vec<_> = not_wanted_reference.iter().map(|d| d.rotate_45(rotation)).collect();
         auto_tiler.add_tile(
             TileDefinition::new(tile, terrain).add_possible_requirements(vec![
-                Requirement::new(neighbors.clone(), &dirs).not_wanted_comp(&not_wanted_reference),
+                Requirement::new(neighbors.clone(), &dirs).not_wanted_comp(&not_wanted_rotate),
             ]),
         );
     }
@@ -101,7 +103,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(0, 0), uvec2(2, 0), uvec2(2, 2), uvec2(0, 2)],
         &[Direction::South, Direction::SouthEast, Direction::East],
-        &Direction::ALL,
+        &Direction::ADJACENT,
     );
 
     // border of lake
@@ -129,7 +131,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(4, 2), uvec2(5, 2), uvec2(5, 3), uvec2(4, 3)],
         &[Direction::South, Direction::East],
-        &Direction::ADJACENT,
+        &[Direction::North, Direction::West, Direction::SouthEast],
     );
 
     // simple straight forward
@@ -228,6 +230,17 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>){
         &[Direction::South],
         &Direction::ADJACENT,
     );
+
+    // Two straight forward
+    calculate(
+        auto_tiler,
+        terrain,
+        &neighbors,
+        &UVec2::ZERO,
+        &[uvec2(1, 21), uvec2(0, 24)],
+        &[Direction::East, Direction::West],
+        &Direction::ADJACENT
+    );
 }
 
 pub fn build_auto_tiler() -> AutoTiler<Terrain, UVec2> {
@@ -251,6 +264,8 @@ pub fn build_auto_tiler() -> AutoTiler<Terrain, UVec2> {
     );
 
     add_mountain(&mut auto_tiler);
+
+    auto_tiler.add_tile(TileDefinition::new(uvec2(1,40), Terrain::Forest).add_possible_requirements(vec![Requirement::new::<Direction>(HashSet::new(), &[])]));
 
     auto_tiler
 }

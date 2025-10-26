@@ -1,4 +1,4 @@
-use bevy::{prelude::*, ui::UiPlugin};
+use bevy::{prelude::*};
 use bevy_flair::FlairPlugin;
 
 mod animations;
