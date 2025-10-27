@@ -1,74 +1,17 @@
+use std::collections::{HashMap, HashSet};
+
 use assets_helper::AssetsTrait;
-use auto_tiler::{AsMask, AutoTiler, BoardTrait, Neighbor};
-use bevy::prelude::*;
+use auto_tiler::{AutoTiler, BoardTrait, Neighbor};
+use bevy::{prelude::*, render::render_resource::encase::private::Length};
 use rand::seq::IndexedRandom;
 
 use crate::{
     assets::FileAssets,
     board::{
-        samples::base_board,
-        terrain::{Terrain, build_auto_tiler},
+        direction::Direction, samples::base_board, terrain::{self, build_auto_tiler, Terrain}
     },
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Direction {
-    North = 0b00000001,
-    NorthEast = 0b00000010,
-    East = 0b00000100,
-    SouthEast = 0b00001000,
-    South = 0b00010000,
-    SouthWest = 0b00100000,
-    West = 0b01000000,
-    NorthWest = 0b10000000,
-}
-
-impl Direction {
-    pub const ADJACENT: [Direction; 4] = [
-        Direction::North,
-        Direction::East,
-        Direction::South,
-        Direction::West,
-    ];
-
-    pub fn rotate_45(self, times: u8) -> Self {
-        let bits = self.as_mask();
-        let shift = (times % 8) as u32;
-
-        // Fem rotate left: els bits que surten per l'esquerra entren per la dreta
-        let new_bits = (bits << shift) | (bits >> (8 - shift));
-        let moded = new_bits % (0b100000000);
-
-        match moded {
-            x if x == Direction::North.as_mask() => Direction::North,
-            x if x == Direction::NorthEast.as_mask() => Direction::NorthEast,
-            x if x == Direction::East.as_mask() => Direction::East,
-            x if x == Direction::SouthEast.as_mask() => Direction::SouthEast,
-            x if x == Direction::South.as_mask() => Direction::South,
-            x if x == Direction::SouthWest.as_mask() => Direction::SouthWest,
-            x if x == Direction::West.as_mask() => Direction::West,
-            x if x == Direction::NorthWest.as_mask() => Direction::NorthWest,
-            unknown => panic!("Something problematic happened processing rotate, we got {unknown}"),
-        }
-    }
-}
-
-impl AsMask for Direction {
-    fn as_mask(self) -> u32 {
-        self as u32
-    }
-
-    const ALL: &'static [Self] = &[
-        Direction::North,
-        Direction::NorthEast,
-        Direction::East,
-        Direction::SouthEast,
-        Direction::South,
-        Direction::SouthWest,
-        Direction::West,
-        Direction::NorthWest,
-    ];
-}
 
 pub struct BoardPlugin;
 
@@ -91,10 +34,64 @@ pub struct Tiler(AutoTiler<Terrain, UVec2>);
 pub struct Board {
     width: usize,
     height: usize,
-    tiles: Vec<Vec<Terrain>>,
+    terrains: Vec<Vec<Terrain>>,
+    layers: Vec<BoardLayer>,
+}
+
+struct BoardLayer {
+    tiles: HashMap<UVec2, Terrain>
+}
+
+impl BoardLayer {
+    fn build( terrains: &Vec<Vec<Terrain>>, required: &HashSet<Terrain>, fill: Option<Terrain>) -> Self {
+        let mut tiles = HashMap::new();
+        for (y, row) in terrains.iter().enumerate(){
+            for (x, tile) in row.iter().enumerate() {
+                let coord = uvec2(x as u32,y as u32);
+                if required.contains(tile) {
+                    tiles.insert(coord, tile.clone());
+                } else if let Some(default) = fill {
+                    tiles.insert(coord, default);
+                }
+            }
+        }
+
+        Self {
+            tiles
+        }
+    }
+}
+
+impl BoardTrait<Terrain, UVec2, Direction> for BoardLayer {
+    fn get(&self, pos: &UVec2) -> Option<&Terrain> {
+        self.tiles.get(pos)
+    }
+
+    fn get_neighbors(&self, pos: &UVec2, directions: &[Direction]) -> Vec<Neighbor<Terrain, Direction>> {
+        directions
+            .iter()
+            .filter_map(|dir| Some((dir,dir.move_point(pos)?)))
+            .filter_map(|(dir, neighbor_pos)| {
+                self.get(&neighbor_pos)
+                    .map(|terrain| Neighbor::new(*terrain, *dir))
+            })
+            .collect()
+    }
 }
 
 impl Board {
+    fn new(width: usize, height: usize, terrains: Vec<Vec<Terrain>>) -> Self {
+        let layers = [
+            BoardLayer::build(&terrains, &HashSet::from([Terrain::Plain, Terrain::Sea, Terrain::Road, Terrain::Beach]), Some(Terrain::Plain)),
+            BoardLayer::build(&terrains, &HashSet::from([Terrain::Mountain, Terrain::Forest]), None)
+        ];
+        Self {
+            width,
+            height,
+            terrains,
+            layers: layers.into()
+        }
+    }
     pub fn get_size(&self) -> (usize, usize) {
         (self.width, self.height)
     }
@@ -103,7 +100,8 @@ impl Board {
         Self {
             width,
             height,
-            tiles: vec![vec![terrain; width]; height],
+            terrains: vec![vec![terrain; width]; height],
+            layers: Default::default(),
         }
     }
 
@@ -140,11 +138,11 @@ impl Board {
             }
             tiles.push(row);
         }
-        Self {
+        Self::new(
             width,
             height,
             tiles,
-        }
+        )
     }
 }
 
@@ -155,7 +153,7 @@ impl BoardTrait<Terrain, UVec2, Direction> for Board {
         if x >= self.width || y >= self.height {
             return None;
         }
-        Some(&self.tiles[pos.y as usize][pos.x as usize])
+        Some(&self.terrains[pos.y as usize][pos.x as usize])
     }
 
     fn get_neighbors(
@@ -165,17 +163,8 @@ impl BoardTrait<Terrain, UVec2, Direction> for Board {
     ) -> Vec<Neighbor<Terrain, Direction>> {
         directions
             .iter()
-            .filter_map(|dir| {
-                let neighbor_pos = match dir {
-                    Direction::North => uvec2(pos.x, pos.y + 1),
-                    Direction::South => uvec2(pos.x, pos.y.checked_sub(1)?),
-                    Direction::East => uvec2(pos.x + 1, pos.y),
-                    Direction::West => uvec2(pos.x.checked_sub(1)?, pos.y),
-                    Direction::NorthEast => uvec2(pos.x + 1, pos.y + 1),
-                    Direction::NorthWest => uvec2(pos.x.checked_sub(1)?, pos.y + 1),
-                    Direction::SouthEast => uvec2(pos.x + 1, pos.y.checked_sub(1)?),
-                    Direction::SouthWest => uvec2(pos.x.checked_sub(1)?, pos.y.checked_sub(1)?),
-                };
+            .filter_map(|dir| Some((dir,dir.move_point(pos)?)))
+            .filter_map(|(dir, neighbor_pos)| {
                 self.get(&neighbor_pos)
                     .map(|terrain| Neighbor::new(*terrain, *dir))
             })
@@ -196,11 +185,11 @@ impl From<Vec<Vec<&str>>> for Board {
             tiles.push(row.iter().map(|text| Terrain::from(*text)).collect());
         }
         bevy::log::info!("Transforming {width} {height}");
-        Self {
+        Self::new(
             width,
             height,
             tiles,
-        }
+        )
     }
 }
 
@@ -243,25 +232,28 @@ fn spawn_terrain(
     let texture_atlas = helper.atlas_layout(UVec2::splat(32));
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     let auto_tiler: &AutoTiler<Terrain, UVec2> = &auto_tiler.0;
+    let layers = board.layers.length();
     commands
         .spawn((Transform::IDENTITY, Visibility::Inherited, MainBoard))
         .with_children(|parent| {
             for pos in board.get_all() {
-                if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(&*board, pos) {
-                    parent.spawn((
-                        Sprite::from_atlas_image(
-                            texture_handle.clone(),
-                            TextureAtlas {
-                                layout: texture_atlas_handle.clone(),
-                                index: helper.index(tile_coords),
-                            },
-                        ),
-                        Transform::from_translation(vec3(
-                            (pos.x * 32) as f32,
-                            (pos.y * 32) as f32,
-                            0.,
-                        )),
-                    ));
+                for (idx, layer) in board.layers.iter().enumerate(){
+                    if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(&*layer, pos) {
+                        parent.spawn((
+                            Sprite::from_atlas_image(
+                                texture_handle.clone(),
+                                TextureAtlas {
+                                    layout: texture_atlas_handle.clone(),
+                                    index: helper.index(tile_coords),
+                                },
+                            ),
+                            Transform::from_translation(vec3(
+                                (pos.x * 32) as f32,
+                                (pos.y * 32) as f32,
+                                idx as f32 -layers as f32,
+                            )),
+                        ));
+                    }
                 }
             }
         });
