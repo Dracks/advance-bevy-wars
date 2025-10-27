@@ -1,3 +1,4 @@
+use assets_helper::AssetsTrait;
 use auto_tiler::{AsMask, AutoTiler, BoardTrait, Neighbor};
 use bevy::prelude::*;
 use rand::seq::IndexedRandom;
@@ -238,7 +239,7 @@ fn spawn_terrain(
 ) {
     let helper = TileHelper::new(uvec2(68, 45));
 
-    let texture_handle = FileAssets::ImagesGameTerrain.load(&assets);
+    let texture_handle = FileAssets::ImagesGameTerrainPng.load(&assets);
     let texture_atlas = helper.atlas_layout(UVec2::splat(32));
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     let auto_tiler: &AutoTiler<Terrain, UVec2> = &auto_tiler.0;

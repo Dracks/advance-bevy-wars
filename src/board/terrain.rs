@@ -36,8 +36,8 @@ impl From<&str> for Terrain {
 }
 
 enum NotWanted<'a> {
-    computed(&'a [Direction]),
-    rotated(&'a [Direction]),
+    Computed(&'a [Direction]),
+    Rotated(&'a [Direction]),
 }
 
 fn calculate(
@@ -54,10 +54,10 @@ fn calculate(
         let dirs: Vec<_> = directions.iter().map(|d| d.rotate_45(rotation)).collect();
         let mut requirement = Requirement::new(neighbors.clone(), &dirs);
         match not_wanted_reference {
-            NotWanted::computed(directions) => {
+            NotWanted::Computed(directions) => {
                 requirement = requirement.not_wanted_comp(directions)
             }
-            NotWanted::rotated(directions) => {
+            NotWanted::Rotated(directions) => {
                 let rotate_directions: Vec<_> =
                     directions.iter().map(|d| d.rotate_45(rotation)).collect();
                 requirement = requirement.not_wanted(&rotate_directions)
@@ -105,7 +105,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(3, 2), uvec2(0, 3), uvec2(3, 0), uvec2(2, 3)],
         &[Direction::North],
-        &NotWanted::computed(&Direction::ADJACENT),
+        &NotWanted::Computed(&Direction::ADJACENT),
     );
 
     // corner of lake
@@ -116,7 +116,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(0, 0), uvec2(2, 0), uvec2(2, 2), uvec2(0, 2)],
         &[Direction::South, Direction::SouthEast, Direction::East],
-        &NotWanted::rotated(&[Direction::North, Direction::West]),
+        &NotWanted::Rotated(&[Direction::North, Direction::West]),
     );
 
     // border of lake
@@ -133,7 +133,7 @@ fn add_std_tiles(
             Direction::SouthEast,
             Direction::SouthWest,
         ],
-        &NotWanted::computed(&Direction::ADJACENT),
+        &NotWanted::Computed(&Direction::ADJACENT),
     );
 
     // Simple Corner
@@ -144,7 +144,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(4, 2), uvec2(5, 2), uvec2(5, 3), uvec2(4, 3)],
         &[Direction::South, Direction::East],
-        &NotWanted::rotated(&[Direction::North, Direction::West, Direction::SouthEast]),
+        &NotWanted::Rotated(&[Direction::North, Direction::West, Direction::SouthEast]),
     );
 
     // simple straight forward
@@ -174,7 +174,7 @@ fn add_std_tiles(
         &offset,
         &[uvec2(6, 1), uvec2(9, 0), uvec2(7, 1), uvec2(9, 1)],
         &[Direction::South, Direction::East, Direction::North],
-        &NotWanted::computed(&Direction::ALL),
+        &NotWanted::Computed(&Direction::ALL),
     );
 
     // All Except one corner
@@ -193,7 +193,7 @@ fn add_std_tiles(
             Direction::West,
             Direction::NorthWest,
         ],
-        &NotWanted::computed(Direction::ALL),
+        &NotWanted::Computed(Direction::ALL),
     )
 }
 
@@ -219,7 +219,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>) {
         &UVec2::ZERO,
         &[uvec2(11, 21), uvec2(13, 21), uvec2(13, 23), uvec2(11, 23)],
         &[Direction::South, Direction::SouthEast, Direction::East],
-        &NotWanted::rotated(&[Direction::North, Direction::West]),
+        &NotWanted::Rotated(&[Direction::North, Direction::West]),
     );
 
     // Sides of the mountain
@@ -230,7 +230,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>) {
         &UVec2::ZERO,
         &[uvec2(12, 21), uvec2(13, 22), uvec2(12, 23), uvec2(11, 22)],
         &[Direction::South, Direction::West, Direction::East],
-        &NotWanted::rotated(&[Direction::North]),
+        &NotWanted::Rotated(&[Direction::North]),
     );
 
     // Only one side
@@ -241,7 +241,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>) {
         &UVec2::ZERO,
         &[uvec2(0, 23), uvec2(3, 21), uvec2(0, 24), uvec2(0, 21)],
         &[Direction::South],
-        &NotWanted::computed(&Direction::ADJACENT),
+        &NotWanted::Computed(&Direction::ADJACENT),
     );
 
     // Two straight forward
@@ -252,7 +252,7 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>) {
         &UVec2::ZERO,
         &[uvec2(1, 21), uvec2(0, 24)],
         &[Direction::East, Direction::West],
-        &NotWanted::computed(&Direction::ADJACENT),
+        &NotWanted::Computed(&Direction::ADJACENT),
     );
 }
 

@@ -1,3 +1,4 @@
+use assets_helper::AssetsTrait;
 use auto_tiler::BoardTrait;
 use bevy::prelude::*;
 use bevy_flair::style::components::NodeStyleSheet;
@@ -78,7 +79,7 @@ fn setup(
     assets: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let cursor_img = FileAssets::ImagesGameCursorHud36X36.load(&assets);
+    let cursor_img = FileAssets::ImagesGameCursorHud36X36Png.load(&assets);
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(36), 9, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
     let animation_indices = AnimationIndices::new(0, 8);
@@ -98,7 +99,7 @@ fn setup(
     ));
 
     commands.spawn((
-        NodeStyleSheet::new(FileAssets::MenuStyleUi.load(&assets)),
+        NodeStyleSheet::new(FileAssets::MenuStyleUiCss.load(&assets)),
         Text::default(),
         Node::default(),
         Name::new("tile-info"),
