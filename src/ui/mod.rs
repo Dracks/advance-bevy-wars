@@ -27,14 +27,14 @@ impl Plugin for UiPlugin {
 
 #[derive(Component, Default)]
 struct Cursor {
-    position: UVec2,
+    pub position: UVec2,
 }
 
 fn follow_cursor(
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     board: Res<Board>,
-    mut game_cursor: Single<&mut Transform, With<Cursor>>,
+    mut game_cursor: Single<(&mut Transform, &mut Cursor)>,
     mut hover: MessageWriter<HoverCell>,
 ) {
     let Ok(window) = windows.single() else {
@@ -60,7 +60,9 @@ fn follow_cursor(
             }
             let new_x = (coord_x as f32) * 32.0;
             let new_y = (coord_y as f32) * 32.0;
-            game_cursor.translation = vec3(new_x, new_y, game_cursor.translation.y);
+
+            game_cursor.0.translation = vec3(new_x, new_y, game_cursor.0.translation.y);
+            game_cursor.1.position = uvec2(coord_x as u32, coord_y as u32);
             hover.write(HoverCell {
                 cell: ivec2(coord_x, coord_y).try_into().unwrap(),
             });
