@@ -357,6 +357,8 @@ pub enum FileAssets {
     TextCreditsMd,
     #[allow(dead_code)]
     MenuStyleUiCss,
+    #[allow(dead_code)]
+    MenuStyleMenuCss,
 }
 
 impl AssetsTrait for FileAssets {
@@ -539,6 +541,7 @@ impl AssetsTrait for FileAssets {
             FileAssets::SoundsUiToggle004Ogg => "sounds/ui/toggle_004.ogg",
             FileAssets::TextCreditsMd => "text/credits.md",
             FileAssets::MenuStyleUiCss => "menu_style/ui.css",
+            FileAssets::MenuStyleMenuCss => "menu_style/menu.css",
         }
     }
 }

@@ -8,10 +8,14 @@ use rand::seq::IndexedRandom;
 use crate::{
     assets::FileAssets,
     board::{
-        direction::Direction, samples::base_board, terrain::{self, build_auto_tiler, Terrain}
+        direction::Direction,
+        samples::base_board,
+        terrain::{Terrain, build_auto_tiler},
     },
 };
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct ShowBoard;
 
 pub struct BoardPlugin;
 
@@ -19,7 +23,9 @@ impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Board::random(uvec2(50, 30)))
             .insert_resource(Tiler(build_auto_tiler()))
-            .add_systems(Startup, spawn_terrain);
+            .add_systems(OnEnter(ShowBoard), spawn_terrain)
+            .add_systems(OnExit(ShowBoard), drop_terrain);
+
         app.insert_resource(base_board());
     }
 }
@@ -39,15 +45,19 @@ pub struct Board {
 }
 
 struct BoardLayer {
-    tiles: HashMap<UVec2, Terrain>
+    tiles: HashMap<UVec2, Terrain>,
 }
 
 impl BoardLayer {
-    fn build( terrains: &Vec<Vec<Terrain>>, required: &HashSet<Terrain>, fill: Option<Terrain>) -> Self {
+    fn build(
+        terrains: &Vec<Vec<Terrain>>,
+        required: &HashSet<Terrain>,
+        fill: Option<Terrain>,
+    ) -> Self {
         let mut tiles = HashMap::new();
-        for (y, row) in terrains.iter().enumerate(){
+        for (y, row) in terrains.iter().enumerate() {
             for (x, tile) in row.iter().enumerate() {
-                let coord = uvec2(x as u32,y as u32);
+                let coord = uvec2(x as u32, y as u32);
                 if required.contains(tile) {
                     tiles.insert(coord, tile.clone());
                 } else if let Some(default) = fill {
@@ -56,9 +66,7 @@ impl BoardLayer {
             }
         }
 
-        Self {
-            tiles
-        }
+        Self { tiles }
     }
 }
 
@@ -67,10 +75,14 @@ impl BoardTrait<Terrain, UVec2, Direction> for BoardLayer {
         self.tiles.get(pos)
     }
 
-    fn get_neighbors(&self, pos: &UVec2, directions: &[Direction]) -> Vec<Neighbor<Terrain, Direction>> {
+    fn get_neighbors(
+        &self,
+        pos: &UVec2,
+        directions: &[Direction],
+    ) -> Vec<Neighbor<Terrain, Direction>> {
         directions
             .iter()
-            .filter_map(|dir| Some((dir,dir.move_point(pos)?)))
+            .filter_map(|dir| Some((dir, dir.move_point(pos)?)))
             .filter_map(|(dir, neighbor_pos)| {
                 self.get(&neighbor_pos)
                     .map(|terrain| Neighbor::new(*terrain, *dir))
@@ -82,14 +94,22 @@ impl BoardTrait<Terrain, UVec2, Direction> for BoardLayer {
 impl Board {
     fn new(width: usize, height: usize, terrains: Vec<Vec<Terrain>>) -> Self {
         let layers = [
-            BoardLayer::build(&terrains, &HashSet::from([Terrain::Plain, Terrain::Sea, Terrain::Road, Terrain::Beach]), Some(Terrain::Plain)),
-            BoardLayer::build(&terrains, &HashSet::from([Terrain::Mountain, Terrain::Forest]), None)
+            BoardLayer::build(
+                &terrains,
+                &HashSet::from([Terrain::Plain, Terrain::Sea, Terrain::Road, Terrain::Beach]),
+                Some(Terrain::Plain),
+            ),
+            BoardLayer::build(
+                &terrains,
+                &HashSet::from([Terrain::Mountain, Terrain::Forest]),
+                None,
+            ),
         ];
         Self {
             width,
             height,
             terrains,
-            layers: layers.into()
+            layers: layers.into(),
         }
     }
     pub fn get_size(&self) -> (usize, usize) {
@@ -138,11 +158,7 @@ impl Board {
             }
             tiles.push(row);
         }
-        Self::new(
-            width,
-            height,
-            tiles,
-        )
+        Self::new(width, height, tiles)
     }
 }
 
@@ -163,7 +179,7 @@ impl BoardTrait<Terrain, UVec2, Direction> for Board {
     ) -> Vec<Neighbor<Terrain, Direction>> {
         directions
             .iter()
-            .filter_map(|dir| Some((dir,dir.move_point(pos)?)))
+            .filter_map(|dir| Some((dir, dir.move_point(pos)?)))
             .filter_map(|(dir, neighbor_pos)| {
                 self.get(&neighbor_pos)
                     .map(|terrain| Neighbor::new(*terrain, *dir))
@@ -185,11 +201,7 @@ impl From<Vec<Vec<&str>>> for Board {
             tiles.push(row.iter().map(|text| Terrain::from(*text)).collect());
         }
         bevy::log::info!("Transforming {width} {height}");
-        Self::new(
-            width,
-            height,
-            tiles,
-        )
+        Self::new(width, height, tiles)
     }
 }
 
@@ -237,8 +249,9 @@ fn spawn_terrain(
         .spawn((Transform::IDENTITY, Visibility::Inherited, MainBoard))
         .with_children(|parent| {
             for pos in board.get_all() {
-                for (idx, layer) in board.layers.iter().enumerate(){
-                    if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(&*layer, pos) {
+                for (idx, layer) in board.layers.iter().enumerate() {
+                    if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(&*layer, pos)
+                    {
                         parent.spawn((
                             Sprite::from_atlas_image(
                                 texture_handle.clone(),
@@ -250,13 +263,19 @@ fn spawn_terrain(
                             Transform::from_translation(vec3(
                                 (pos.x * 32) as f32,
                                 (pos.y * 32) as f32,
-                                idx as f32 -layers as f32,
+                                idx as f32 - layers as f32,
                             )),
                         ));
                     }
                 }
             }
         });
+}
+
+fn drop_terrain(mut commands: Commands, query: Query<Entity, With<MainBoard>>) {
+    for board in query.iter() {
+        commands.entity(board).despawn();
+    }
 }
 
 #[cfg(test)]

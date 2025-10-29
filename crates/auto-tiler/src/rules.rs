@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashSet},
-    hash::Hash,
-};
+use std::{collections::HashSet, hash::Hash};
 
 use crate::board::Neighbor;
 pub trait AsMask: Copy

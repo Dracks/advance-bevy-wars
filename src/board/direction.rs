@@ -1,6 +1,5 @@
 use auto_tiler::AsMask;
-use bevy::math::{uvec2, UVec2};
-
+use bevy::math::{UVec2, uvec2};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {

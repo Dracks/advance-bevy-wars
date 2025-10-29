@@ -1,0 +1,94 @@
+@font-face {
+    font-family: "editundo";
+    src: url("fonts/editundo.ttf");
+}
+
+:root {
+    font-family: "editundo";
+    font-size: 40.0;
+
+    color: #fff;
+
+    width: 100%;
+    height: 100%;
+}
+
+:root, #game_menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+
+
+#vertical_panel {
+    flex-direction: column;
+    padding: 5px
+}
+
+button {
+    padding: 5px;
+    &:hover {
+        color: #0cc;
+    }
+    &:focus {
+        color: #0cc;
+    }
+}
+
+#title {
+    font-size: 80.0;
+}
+
+#game_over {
+    height: 70%;
+
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    & > #base {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        & > #buttons > button {
+            width: 300px;
+            justify-content: center;
+        }
+    }
+}
+
+#difficulty {
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    & > #vertical_panel{
+        width: 50%;
+        & > button {
+            justify-content: end;
+        }
+    }
+    & > #explanation {
+        width: 50%;
+        padding: 5px;
+        font-size: 30;
+        border: 1px;
+        border-color: #0CC;
+    }
+}
+
+#loading_screen > #progress_box {
+    width: 400px;
+    height: 30px;
+    border: 2px;
+    padding: 4px;
+    border-color:#778;
+    background-color: #112;
+
+    & > #progress_bar {
+        width: 0%;
+        height: 100%;
+        background-color: #0CC;
+    }
+}
