@@ -1,5 +1,5 @@
 use auto_tiler::AsMask;
-use bevy::math::{UVec2, uvec2};
+use bevy::math::{UVec2, Vec2, uvec2, vec2};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {
@@ -54,6 +54,20 @@ impl Direction {
             Direction::SouthWest => uvec2(pos.x.checked_sub(1)?, pos.y.checked_sub(1)?),
         };
         Some(data)
+    }
+
+    #[allow(dead_code)]
+    pub fn as_vec2(self) -> Vec2 {
+        match self {
+            Direction::North => vec2(0., 1.),
+            Direction::South => vec2(0., -1.),
+            Direction::East => vec2(1., 0.),
+            Direction::West => vec2(-1., 0.),
+            Direction::NorthEast => vec2(1., 1.),
+            Direction::NorthWest => vec2(-1., 1.),
+            Direction::SouthEast => vec2(1., -1.),
+            Direction::SouthWest => vec2(-1., -1.),
+        }
     }
 }
 

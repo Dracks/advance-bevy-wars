@@ -16,7 +16,7 @@ pub enum Terrain {
     Bridge,
     Forest,
     Wall,
-    BreakableWall,
+    // BreakableWall,
 }
 
 impl From<&str> for Terrain {

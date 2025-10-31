@@ -2,11 +2,10 @@ use assets_helper::AssetsTrait;
 use auto_tiler::BoardTrait;
 use bevy::prelude::*;
 use bevy_flair::style::components::NodeStyleSheet;
+use ui_helpers::prelude::clean_entities;
 
 use crate::{
-    animations::{AnimationIndices, AnimationTimer},
-    assets::FileAssets,
-    board::Board,
+    GameState, animations::{AnimationIndices, AnimationTimer}, assets::FileAssets, board::{Board, ShowBoard}
 };
 
 pub struct UiPlugin;
@@ -18,9 +17,10 @@ pub struct HoverCell {
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(Update, update_ui)
-            .add_systems(Update, follow_cursor)
+        app.add_systems(OnEnter(GameState::InGame), setup_game_ui)
+            .add_systems(OnExit(GameState::InGame), clean_entities::<GameUI>)
+            .add_systems(Update, update_game_ui.run_if(in_state(GameState::InGame)))
+            .add_systems(Update, follow_cursor.run_if(in_state(ShowBoard)))
             .add_message::<HoverCell>();
     }
 }
@@ -76,7 +76,7 @@ struct TileInfo;
 #[derive(Component)]
 struct GameUI;
 
-fn setup(
+fn setup_game_ui(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
@@ -95,6 +95,7 @@ fn setup(
                 index: 1,
             },
         ),
+        GameUI,
         Transform::from_translation(Vec3::Z * 4.),
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         animation_indices,
@@ -115,7 +116,7 @@ fn setup(
     ));
 }
 
-fn update_ui(
+fn update_game_ui(
     tile_info: Single<Entity, With<TileInfo>>,
     mut writer: TextUiWriter,
     mut hover_reader: MessageReader<HoverCell>,
