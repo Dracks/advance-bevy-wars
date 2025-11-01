@@ -3,12 +3,16 @@ use std::collections::{HashMap, HashSet};
 use assets_helper::AssetsTrait;
 use auto_tiler::{AutoTiler, BoardTrait, Neighbor};
 use bevy::{prelude::*, render::render_resource::encase::private::Length};
+use bevy_flair::style::components::NodeStyleSheet;
 use rand::seq::IndexedRandom;
+use ui_helpers::prelude::{LoadFiles, Loading, LoadingPlugin, clean_entities};
 
 use crate::{
+    GameState,
     assets::FileAssets,
     board::{
         direction::Direction,
+        map::{Map, MapAssetLoader},
         samples::base_board,
         terrain::{Terrain, build_auto_tiler},
     },
@@ -19,15 +23,55 @@ pub struct ShowBoard;
 
 pub struct BoardPlugin;
 
+#[derive(SubStates, Clone, Copy, PartialEq, Eq, Hash, Debug, Default)]
+#[source(ShowBoard = ShowBoard)]
+pub enum BoardLoad {
+    #[default]
+    Loading,
+    Complete,
+}
+
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Board::random(uvec2(50, 30)))
             .insert_resource(Tiler(build_auto_tiler()))
-            .add_systems(OnEnter(ShowBoard), spawn_terrain)
+            .add_systems(OnEnter(BoardLoad::Complete), spawn_terrain)
             .add_systems(OnExit(ShowBoard), drop_terrain);
 
         app.insert_resource(base_board());
+
+        app.init_asset::<Map>()
+            .init_asset_loader::<MapAssetLoader>();
+
+        app
+            .add_sub_state::<BoardLoad>()
+            .add_plugins(LoadingPlugin::<BoardLoad>::new())
+            .add_systems(OnEnter(ShowBoard), spawn_loading)
+            .add_systems(
+                OnExit(BoardLoad::Loading),
+                clean_entities::<Loading<BoardLoad>>,
+            );
     }
+}
+
+fn spawn_loading(mut commands: Commands, assets: Res<AssetServer>) {
+    let loading = LoadFiles::from_duration(0.1)
+        .with_assets(vec![FileAssets::MapTestAbwm.load::<Map>(&assets).into()]);
+
+    commands.insert_resource(loading);
+    commands.spawn((
+        NodeStyleSheet::new(FileAssets::MenuStyleMenuCss.load(&assets)),
+        Node::default(),
+        Name::new("loading_screen"),
+        Loading::new(BoardLoad::Complete),
+        children![(
+            Text::new("Loading..."),
+            Node {
+                margin: UiRect::bottom(Val::Px(30.0)),
+                ..default()
+            }
+        ),],
+    ));
 }
 
 #[derive(Component)]
@@ -239,6 +283,8 @@ fn spawn_terrain(
     board: Res<Board>,
 ) {
     let helper = TileHelper::new(uvec2(68, 45));
+    let map = FileAssets::MapTestAbwm.load::<Map>(&assets);
+    bevy::log::info!("The Loaded map! {:?}", map);
 
     let texture_handle = FileAssets::ImagesGameTerrainPng.load(&assets);
     let texture_atlas = helper.atlas_layout(UVec2::splat(32));

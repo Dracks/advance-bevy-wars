@@ -4,10 +4,14 @@ use bevy_flair::FlairPlugin;
 mod animations;
 mod assets;
 mod board;
-mod ui;
+mod interactive;
 mod menus;
+mod ui;
 
-use crate::{board::{Board, BoardPlugin, ShowBoard}, menus::MenusPlugin};
+use crate::{
+    board::{Board, BoardPlugin, ShowBoard},
+    menus::MenusPlugin,
+};
 
 #[derive(States, Clone, PartialEq, Eq, Hash, Debug, Default)]
 pub enum GameState {

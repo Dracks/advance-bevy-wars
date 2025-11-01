@@ -1,5 +1,6 @@
 mod board;
 mod direction;
+mod map;
 mod samples;
 mod terrain;
 

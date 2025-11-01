@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_flair::prelude::*;
 
-use assets_helper::AssetsTrait;
-use ui_helpers::{prelude::Action, register_menu};
 use crate::{GameState, assets::FileAssets, menus::Menus};
+use assets_helper::AssetsTrait;
 use ui_helpers::prelude::{button_press_system, clean_entities};
+use ui_helpers::{prelude::Action, register_menu};
 
 #[derive(Component)]
 pub struct MainMenu;
@@ -25,7 +25,7 @@ register_menu!(
     main_menu_actions_handler
 );
 
-pub fn spawn_main_menu(mut commands: Commands, assets_server: Res<AssetServer>){
+pub fn spawn_main_menu(mut commands: Commands, assets_server: Res<AssetServer>) {
     commands.spawn((
         Node::default(),
         NodeStyleSheet::new(FileAssets::MenuStyleMenuCss.load(&assets_server)),
@@ -69,7 +69,7 @@ pub fn main_menu_actions_handler(
             }
             MainMenuActions::NewGame => {
                 state.set(GameState::InGame);
-            },
+            }
             MainMenuActions::Editor => {
                 state.set(GameState::InEditor);
             }

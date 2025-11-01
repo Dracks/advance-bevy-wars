@@ -5,7 +5,10 @@ use bevy_flair::style::components::NodeStyleSheet;
 use ui_helpers::prelude::clean_entities;
 
 use crate::{
-    GameState, animations::{AnimationIndices, AnimationTimer}, assets::FileAssets, board::{Board, ShowBoard}
+    GameState,
+    animations::{AnimationIndices, AnimationTimer},
+    assets::FileAssets,
+    board::{Board, ShowBoard},
 };
 
 pub struct UiPlugin;
