@@ -1,0 +1,14 @@
+version=1
+width=3
+height=3
+terrain = [
+    [ "p", "p", "p"],
+    [ "p", "p", "p"],
+    [ "p", "p", "p"],
+]
+[buildings]
+1x1 = {type="city"}
+3x1 = {owner=1, type="headquarters"}
+
+[units]
+2x2 = {type="infantry", owner=1}

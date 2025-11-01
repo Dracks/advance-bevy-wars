@@ -3,10 +3,10 @@ use bevy::prelude::*;
 pub type PlayerId = u8;
 pub type CapturePoints = u8;
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq)]
 pub struct Owner(pub PlayerId);
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq)]
 pub struct Life(pub u8);
 
 impl Life {
