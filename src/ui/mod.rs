@@ -1,5 +1,4 @@
 use assets_helper::AssetsTrait;
-use auto_tiler::BoardTrait;
 use bevy::prelude::*;
 use bevy_flair::style::components::NodeStyleSheet;
 use ui_helpers::prelude::clean_entities;
@@ -8,7 +7,7 @@ use crate::{
     GameState,
     animations::{AnimationIndices, AnimationTimer},
     assets::FileAssets,
-    board::{Board, ShowBoard},
+    board::{Board, BoardLoad, ShowBoard},
 };
 
 pub struct UiPlugin;
@@ -22,7 +21,7 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), setup_game_ui)
             .add_systems(OnExit(GameState::InGame), clean_entities::<GameUI>)
-            .add_systems(Update, update_game_ui.run_if(in_state(GameState::InGame)))
+            .add_systems(Update, update_game_ui.run_if(in_state(BoardLoad::Complete)))
             .add_systems(Update, follow_cursor.run_if(in_state(ShowBoard)))
             .add_message::<HoverCell>();
     }

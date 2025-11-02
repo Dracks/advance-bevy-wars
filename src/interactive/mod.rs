@@ -3,10 +3,10 @@ use bevy::prelude::*;
 pub type PlayerId = u8;
 pub type CapturePoints = u8;
 
-#[derive(Component, Debug, PartialEq)]
+#[derive(Component, Debug, PartialEq, Clone, Copy)]
 pub struct Owner(pub PlayerId);
 
-#[derive(Component, Debug, PartialEq)]
+#[derive(Component, Debug, PartialEq, Clone, Copy)]
 pub struct Life(pub u8);
 
 impl Life {
@@ -66,7 +66,7 @@ impl Capture {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone, Copy)]
 // Will be nice to be able to force to have owner
 pub struct Income(pub u32);
 

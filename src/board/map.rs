@@ -5,26 +5,51 @@ use bevy::{
 use thiserror::Error;
 use toml::Table;
 
-use crate::interactive::{Income, Life, Owner};
+use crate::{board::terrain::TileTerrain, interactive::{Income, Life, Owner}, matrix::Matrix};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Terrain {
     Plane,
     Road,
     Mountain,
-    // Sea,
-    //Beach,
+    Sea,
+    Beach,
+    Forest,
     //River,
     //Wall,
     //BreakableWall(bool)
 }
-#[derive(Debug)]
+
+pub struct UnknownTerrain(String);
+
+impl TryFrom<&str> for Terrain {
+    type Error = UnknownTerrain;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value.trim() {
+            "p" => Ok(Terrain::Plane),
+            "r" => Ok(Terrain::Road),
+            "m" => Ok(Terrain::Mountain),
+            //"b" => Ok(Terrain::Bridge),
+            "B" => Ok(Terrain::Beach),
+            //"w" => Ok(Terrain::Wall),
+            "f" => Ok(Terrain::Forest),
+            "s" => Ok(Terrain::Sea),
+            // "b" => Ok(Terrain::Beach),
+            // "rv" => Ok(Terrain::River),
+            // "w" => Ok(Terrain::Wall),
+            // "bw" => Ok(Terrain::BreakableWall(false)),
+            // "bwd" => Ok(Terrain::BreakableWall(true)),
+            value => Err(UnknownTerrain(value.into())),
+        }
+    }
+}
+#[derive(Debug, Clone, Copy)]
 pub struct Building {
     owner: Owner,
     income: Income,
     build_type: BuildingType,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum BuildingType {
     City,
     //Town,
@@ -34,13 +59,13 @@ pub enum BuildingType {
     //Airport,
     //OilRig,
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Unit {
     owner: Owner,
     health: Life,
     unit_type: UnitType,
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum UnitType {
     Infantry,
     Mech,
@@ -61,16 +86,52 @@ impl TryFrom<&str> for UnitType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MapCell {
-    terrain: Terrain,
-    building: Option<Building>,
-    unit: Option<Unit>,
+    pub terrain: Terrain,
+    pub building: Option<Building>,
+    pub unit: Option<Unit>,
 }
 
-#[derive(Asset, TypePath, Debug)]
+impl Default for MapCell {
+    fn default() -> Self {
+        MapCell { terrain: Terrain::Plane, building: None, unit: None }
+    }
+}
+
+#[derive(Asset, TypePath, Debug, Clone)]
 pub struct Map {
-    cells: Vec<Vec<MapCell>>,
+    pub cells: Matrix<MapCell>,
+}
+
+impl Map {
+    pub fn empty() -> Self {
+        Self {
+            cells: Matrix::new(1, 1, MapCell::default())
+        }
+    }
+    pub fn width(&self) -> usize {
+        self.cells.cols()
+    }
+
+    pub fn height(&self) -> usize {
+        self.cells.rows()
+    }
+
+    pub fn get_size(&self)-> (usize, usize) {
+        self.cells.size()
+    }
+
+    pub fn get(&self, idx: (usize, usize)) -> Option<&MapCell> {
+        self.cells.get(idx.0, idx.1)
+    }
+}
+
+impl Into<Matrix<TileTerrain>> for &Map {
+    fn into(self) -> Matrix<TileTerrain> {
+        let new_cells : Vec<_> = self.cells.iter().map(|cell| TileTerrain::from(&cell.terrain)).collect();
+        Matrix::from_vec(new_cells, self.cells.cols(), self.cells.rows()).expect("Matrix should be valid")
+    }
 }
 
 // Asset loader
@@ -137,7 +198,7 @@ fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
     let Some(unit_type) = unit_source.get("type").map(|d| d.as_str()).flatten() else {
         return Err(MapLoaderError::ParseError("Unit type must be specified".into()));
     };
-    let unit_type = UnitType::try_from(unit_type).map_err(|err| MapLoaderError::ParseError(format!("Invalid unit type: {unit_type}")))?;
+    let unit_type = UnitType::try_from(unit_type).map_err(|_err| MapLoaderError::ParseError(format!("Invalid unit type: {unit_type}")))?;
 
     let health = unit_source.get("life").map(|d| d.as_integer()).flatten().unwrap_or(100);
     if health <1 {
@@ -162,38 +223,33 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
     let width = width as usize;
     let height = height as usize;
 
-    let mut columns = Vec::new();
-    columns.reserve(height as usize);
+    let mut map = Matrix::new(width, height, MapCell::default());
 
     let Some(terrain) = map_source.get("terrain").map(|d| d.as_array()).flatten() else {
         return Err(MapLoaderError::ParseError("Missing terrain or is not an array".into()))
     };
     if terrain.len() != height {
-        return Err(MapLoaderError::ParseError("Invalid terrain height, it doesn't match the property height".into()))
+        return Err(MapLoaderError::ParseError(format!("Invalid terrain height {}, it doesn't match the property height {height}", terrain.len())))
     }
     for idy in 0..height{
         let Some(terrain_row) = terrain[idy].as_array() else {
-            return Err(MapLoaderError::ParseError(format!("Invalid terrain, row at column {idy} is not an array")));
+            return Err(MapLoaderError::ParseError(format!("Invalid terrain, row {idy} is not an array")));
         };
         if terrain_row.len() != width {
-            return Err(MapLoaderError::ParseError(format!("Invalid terrain width at column {idy}, it doesn't match the property width")));
+            return Err(MapLoaderError::ParseError(format!("Invalid terrain width {} at row {idy}, it doesn't match the property width {width}", terrain_row.len())));
         }
-        let mut row = Vec::new();
-        row.reserve(width as usize);
         for idx in 0..width {
             let Some(cell) = terrain_row[idx].as_str() else {
                 return Err(MapLoaderError::ParseError(format!("Invalid terrain at ({idx}, {idy})")));
             };
-            let terrain_cell = parse_terrain(cell)?;
-            row.push( MapCell {
+            let terrain_cell = Terrain::try_from(cell).map_err(|err| MapLoaderError::ParseError(format!("Unknown terrain type {}", err.0)))?;
+             map[(idx,idy)] = MapCell {
                 terrain: terrain_cell,
                 building: None,
                 unit: None,
-            });
+            };
         }
-        columns.push(row);
     }
-    let mut map = Map{cells: columns};
 
     let empty_list = Table::new();
     let units = map_source.get("units").map(|units| units.as_table()).flatten().unwrap_or(&empty_list);
@@ -207,11 +263,11 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
         let Some(unit_data) = value.as_table() else {
             return Err(MapLoaderError::ParseError(format!("Invalid contents in units coords {:?}", coords)));
         };
-        map.cells[coords.1][coords.0].unit = Some(parse_v1_unit(unit_data)?)
+        map[coords].unit = Some(parse_v1_unit(unit_data)?)
     }
 
 
-    Ok(map)
+    Ok(Map{ cells: map })
 }
 
 fn parse_map(content: &str) -> Result<Map, MapLoaderError> {
@@ -226,109 +282,6 @@ fn parse_map(content: &str) -> Result<Map, MapLoaderError> {
         _ => Err(MapLoaderError::ParseError(format!("Unsupported map version {:?}", version).into()))
     }
 }
-
-fn parse_terrain(s: &str) -> Result<Terrain, MapLoaderError> {
-    match s.trim() {
-        "p" => Ok(Terrain::Plane),
-        "r" => Ok(Terrain::Road),
-        "m" => Ok(Terrain::Mountain),
-        // "s" => Ok(Terrain::Sea),
-        // "b" => Ok(Terrain::Beach),
-        // "rv" => Ok(Terrain::River),
-        // "w" => Ok(Terrain::Wall),
-        // "bw" => Ok(Terrain::BreakableWall(false)),
-        // "bwd" => Ok(Terrain::BreakableWall(true)),
-        _ => Err(MapLoaderError::ParseError(format!(
-            "Unknown terrain: {}",
-            s
-        ))),
-    }
-}
-/*
-fn parse_building(s: &str) -> Result<Building, MapLoaderError> {
-    let parts: Vec<&str> = s.trim().split_whitespace().collect();
-
-    if parts.is_empty() {
-        return Err(MapLoaderError::ParseError("Empty building".to_string()));
-    }
-
-    let build_type = match parts[0] {
-        "c" => BuildingType::City,
-        //"t" => BuildingType::Town,
-        "f" => BuildingType::Factory,
-        "h" => BuildingType::Headquarters,
-        //"pt" => BuildingType::Port,
-        //"a" => BuildingType::Airport,
-        //"o" => BuildingType::OilRig,
-        _ => {
-            return Err(MapLoaderError::ParseError(format!(
-                "Unknown building type: {}",
-                parts[0]
-            )))
-        }
-    };
-
-    let owner = if parts.len() > 1 {
-        let ownerId = parts[1].parse::<u8>();
-        match
-        Owner(parts[1].parse().map_err(|_| {
-            MapLoaderError::ParseError(format!("Invalid owner: {}", parts[1]))
-        })?)
-    } else {
-        Owner(0) // Neutral
-    };
-
-    Ok(Building {
-        owner,
-        income: Income(1000), // Default income
-        build_type,
-    })
-}
-
-fn parse_unit(s: &str) -> Result<Unit, MapLoaderError> {
-    let parts: Vec<&str> = s.trim().split_whitespace().collect();
-
-    if parts.is_empty() {
-        return Err(MapLoaderError::ParseError("Empty unit".to_string()));
-    }
-
-    let unit_type = match parts[0] {
-        "i" => UnitType::Infantry,
-        "r" => UnitType::Reccon,
-        "me" => UnitType::Mech,
-        "ta" => UnitType::Tank,
-        //"ar" => UnitType::Artillery,
-        _ => {
-            return Err(MapLoaderError::ParseError(format!(
-                "Unknown unit type: {}",
-                parts[0]
-            )))
-        }
-    };
-
-    let owner = if parts.len() > 1 {
-        Owner(parts[1].parse().map_err(|_| {
-            MapLoaderError::ParseError(format!("Invalid owner: {}", parts[1]))
-        })?)
-    } else {
-        // No Valid
-        Owner(0)
-    };
-
-    let health = if parts.len() > 2 {
-        Life(parts[2].parse().map_err(|_| {
-            MapLoaderError::ParseError(format!("Invalid health: {}", parts[2]))
-        })?)
-    } else {
-        Life::new()
-    };
-
-    Ok(Unit {
-        owner,
-        health,
-        unit_type,
-    })
-}*/
 
 
 #[cfg(test)]
@@ -345,7 +298,7 @@ mod tests {
         let res = parse_map(data);
         println!("return {:?}", res);
         assert!(res.is_ok());
-        assert_eq!(res.unwrap().cells[0][0].terrain, Terrain::Plane);
+        assert_eq!(res.unwrap().cells[(0,0)].terrain, Terrain::Plane);
     }
 
     #[test]
@@ -366,7 +319,7 @@ mod tests {
         println!("Map: {:?}", map);
         assert!(map.is_ok());
         let map = map.unwrap();
-        assert_eq!(map.cells[0][0].unit, Some(Unit{owner: Owner(1), health: Life(100), unit_type: UnitType::Infantry}));
-        assert_eq!(map.cells[1][0].unit, Some(Unit{owner: Owner(2), health: Life(50), unit_type: UnitType::Mech}));
+        assert_eq!(map.cells[(0,0)].unit, Some(Unit{owner: Owner(1), health: Life(100), unit_type: UnitType::Infantry}));
+        assert_eq!(map.cells[(0,1)].unit, Some(Unit{owner: Owner(2), health: Life(50), unit_type: UnitType::Mech}));
     }
 }

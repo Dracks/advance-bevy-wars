@@ -7,6 +7,7 @@ mod board;
 mod interactive;
 mod menus;
 mod ui;
+mod matrix;
 
 use crate::{
     board::{Board, BoardPlugin, ShowBoard},
@@ -46,10 +47,8 @@ fn main() {
     app.run();
 }
 
-fn setup(mut commands: Commands, board: Res<Board>) {
-    let board_size = board.get_size();
-    let translation = vec3(board_size.0 as f32, board_size.1 as f32, 0.) * (32. / 2.);
-    commands.spawn((Camera2d, Transform::from_translation(translation)));
+fn setup(mut commands: Commands) {
+    commands.spawn((Camera2d, Transform::default()));
 }
 
 impl ComputedStates for ShowBoard {

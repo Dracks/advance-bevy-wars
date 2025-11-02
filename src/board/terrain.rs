@@ -3,10 +3,10 @@ use std::collections::HashSet;
 use auto_tiler::{AsMask, AutoTiler, Requirement, TileDefinition};
 use bevy::math::{UVec2, uvec2};
 
-use crate::board::direction::Direction;
+use crate::board::{direction::Direction, map::Terrain, map::Terrain::{*}};
 
 #[derive(Debug, Eq, Clone, Copy, PartialEq, Default, PartialOrd, Hash)]
-pub enum Terrain {
+pub enum TileTerrain {
     #[default]
     Plain,
     Sea,
@@ -19,18 +19,17 @@ pub enum Terrain {
     // BreakableWall,
 }
 
-impl From<&str> for Terrain {
-    fn from(value: &str) -> Self {
+impl From<&Terrain> for TileTerrain {
+    fn from(value: &Terrain) -> Self {
         match value {
-            "p" => Terrain::Plain,
-            "s" => Terrain::Sea,
-            "r" => Terrain::Road,
-            "m" => Terrain::Mountain,
-            "b" => Terrain::Bridge,
-            "B" => Terrain::Beach,
-            "w" => Terrain::Wall,
-            "f" => Terrain::Forest,
-            value => panic!("Value {value} unsupported"),
+            Plane => Self::Plain,
+            Sea => Self::Sea,
+            Road => Self::Road,
+            Mountain => Self::Mountain,
+            //"b" => Self::Bridge,
+            Beach => Self::Beach,
+            //"w" => Self::Wall,
+            Forest => Self::Forest,
         }
     }
 }
@@ -41,9 +40,9 @@ enum NotWanted<'a> {
 }
 
 fn calculate(
-    auto_tiler: &mut AutoTiler<Terrain, UVec2>,
-    terrain: Terrain,
-    neighbors: &HashSet<Terrain>,
+    auto_tiler: &mut AutoTiler<TileTerrain, UVec2>,
+    terrain: TileTerrain,
+    neighbors: &HashSet<TileTerrain>,
     offset: &UVec2,
     tiles: &[UVec2],
     directions: &[Direction],
@@ -70,10 +69,10 @@ fn calculate(
 }
 
 fn add_std_tiles(
-    auto_tiler: &mut AutoTiler<Terrain, UVec2>,
-    terrain: Terrain,
+    auto_tiler: &mut AutoTiler<TileTerrain, UVec2>,
+    terrain: TileTerrain,
     offset: UVec2,
-    neighbors: Option<Vec<Terrain>>,
+    neighbors: Option<Vec<TileTerrain>>,
 ) {
     let neighbors = match neighbors {
         None => HashSet::from([terrain]),
@@ -197,8 +196,8 @@ fn add_std_tiles(
     )
 }
 
-fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>) {
-    let terrain = Terrain::Mountain;
+fn add_mountain(auto_tiler: &mut AutoTiler<TileTerrain, UVec2>) {
+    let terrain = TileTerrain::Mountain;
     let neighbors = HashSet::from([terrain]);
     auto_tiler.add_tile(
         TileDefinition::new(uvec2(2, 25), terrain).add_possible_requirements(vec![
@@ -256,30 +255,30 @@ fn add_mountain(auto_tiler: &mut AutoTiler<Terrain, UVec2>) {
     );
 }
 
-pub fn build_auto_tiler() -> AutoTiler<Terrain, UVec2> {
+pub fn build_auto_tiler() -> AutoTiler<TileTerrain, UVec2> {
     let mut auto_tiler = AutoTiler::default();
     auto_tiler.add_tile(
-        TileDefinition::new(uvec2(0, 15), Terrain::Plain)
+        TileDefinition::new(uvec2(0, 15), TileTerrain::Plain)
             .add_possible_requirements(vec![Requirement::new::<Direction>(HashSet::new(), &[])]),
     );
-    add_std_tiles(&mut auto_tiler, Terrain::Road, UVec2::ZERO, None);
+    add_std_tiles(&mut auto_tiler, TileTerrain::Road, UVec2::ZERO, None);
     add_std_tiles(
         &mut auto_tiler,
-        Terrain::Sea,
+        TileTerrain::Sea,
         uvec2(0, 5),
-        Some(vec![Terrain::Sea, Terrain::Beach]),
+        Some(vec![TileTerrain::Sea, TileTerrain::Beach]),
     );
     add_std_tiles(
         &mut auto_tiler,
-        Terrain::Beach,
+        TileTerrain::Beach,
         uvec2(0, 10),
-        Some(vec![Terrain::Sea, Terrain::Beach]),
+        Some(vec![TileTerrain::Sea, TileTerrain::Beach]),
     );
 
     add_mountain(&mut auto_tiler);
 
     auto_tiler.add_tile(
-        TileDefinition::new(uvec2(1, 40), Terrain::Forest)
+        TileDefinition::new(uvec2(1, 40), TileTerrain::Forest)
             .add_possible_requirements(vec![Requirement::new::<Direction>(HashSet::new(), &[])]),
     );
 
