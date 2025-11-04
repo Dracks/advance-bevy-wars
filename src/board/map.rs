@@ -63,6 +63,20 @@ pub enum BuildingType {
     //Airport,
     //OilRig,
 }
+
+pub struct UnknownBuildingType;
+impl TryFrom<&str> for BuildingType {
+    type Error = UnknownBuildingType;
+
+    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+        match value.to_lowercase().as_str(){
+            "headquarters" => Ok(Self::Headquarters),
+            "city" => Ok(Self::City),
+            "factory" => Ok(Self::Factory),
+            _ => Err(UnknownBuildingType)
+        }
+    }
+}
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Unit {
     owner: Owner,
@@ -200,6 +214,25 @@ fn parse_position(key: &str) -> Option<(usize, usize)> {
         }
     }
 }
+
+fn parse_v1_building(building_source: &Table) -> Result<Building, MapLoaderError> {
+    let owner_id = building_source.get("owner").map(|d| d.as_integer()).flatten().unwrap_or(0);
+
+    if owner_id < 0 {
+        return Err(MapLoaderError::ParseError("Owner ID must be a positive number".into()))
+    }
+    let Some(building_type) = building_source.get("type").map(|d| d.as_str()).flatten() else {
+        return Err(MapLoaderError::ParseError("Building type must be specified".into()));
+    };
+
+    let build_type = BuildingType::try_from(building_type).map_err(|_err| MapLoaderError::ParseError(format!("Invalid building type: {building_type}")))?;
+
+    Ok(Building{
+        build_type,
+        owner: Owner(owner_id as u8),
+        income: Income(1000),
+    })
+}
 fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
     let Some(owner_id) = unit_source.get("owner").map(|d| d.as_integer()).flatten() else {
         return Err(MapLoaderError::ParseError(
@@ -297,7 +330,7 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
     let empty_list = Table::new();
     let units = map_source
         .get("units")
-        .map(|units| units.as_table())
+        .map(|unit| unit.as_table())
         .flatten()
         .unwrap_or(&empty_list);
     for (key, value) in units.iter() {
@@ -314,11 +347,38 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
         }
         let Some(unit_data) = value.as_table() else {
             return Err(MapLoaderError::ParseError(format!(
-                "Invalid contents in units coords {:?}",
+                "Invalid contents in unit coords {:?}",
                 coords
             )));
         };
         map[coords].unit = Some(parse_v1_unit(unit_data)?)
+    }
+
+    let empty_list = Table::new();
+    let buildings = map_source
+        .get("buildings")
+        .map(|building| building.as_table())
+        .flatten()
+        .unwrap_or(&empty_list);
+    for (key, value) in buildings.iter() {
+        let Some(coords) = parse_position(key) else {
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid coord in build: {key}"
+            )));
+        };
+        if coords.0 > width || coords.1 > height {
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid coords {:?}, they are bigger than ({},{})",
+                coords, width, height
+            )));
+        }
+        let Some(building_data) = value.as_table() else {
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid contents in build coords {:?}",
+                coords
+            )));
+        };
+        map[coords].building = Some(parse_v1_building(building_data)?)
     }
 
     Ok(Map { cells: map })

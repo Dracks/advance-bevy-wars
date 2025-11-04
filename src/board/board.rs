@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    cell,
+    collections::{HashMap, HashSet},
+};
 
 use assets_helper::AssetsTrait;
 use auto_tiler::{AutoTiler, BoardTrait, Neighbor};
@@ -146,10 +149,15 @@ impl Board {
         let texture_atlas_handle = texture_atlases.add(texture_atlas);
         let auto_tiler: &AutoTiler<TileTerrain, UVec2> = &auto_tiler.0;
         let layers = board.layers.length();
+        let unit_handle = FileAssets::ImagesGameUnitsInfantryPng.load(&assets);
+        let unit_texture_atlas = TextureAtlasLayout::from_grid(uvec2(5, 7), 32, 32, None, None);
+        let unit_texture_atlas_handle = texture_atlases.add(unit_texture_atlas);
+
         commands
             .spawn((Transform::IDENTITY, Visibility::Inherited, MainBoard))
             .with_children(|parent| {
                 for pos in board.map.cells.keys() {
+                    let cell_info = &board.map.cells[pos];
                     for (idx, layer) in board.layers.iter().enumerate() {
                         if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(
                             &*layer,
@@ -170,6 +178,41 @@ impl Board {
                                 )),
                             ));
                         }
+                    }
+                    if let Some(unit) = cell_info.unit {
+                        bevy::log::info!("We have units! {:?}", unit);
+                        parent.spawn((
+                            Sprite::from_atlas_image(
+                                unit_handle.clone(),
+                                TextureAtlas {
+                                    layout: unit_texture_atlas_handle.clone(),
+                                    index: 1,
+                                },
+                            ),
+                            Transform::from_translation(vec3(
+                                (pos.0 * 32) as f32,
+                                (pos.1 * 32) as f32,
+                                0.,
+                            )),
+                        ));
+                        // board.units[pos] = entity;
+                    }
+                    if let Some(building) = cell_info.building {
+                        bevy::log::info!("We have buildings! {:?}", building);
+                        parent.spawn((
+                            Sprite::from_atlas_image(
+                                texture_handle.clone(),
+                                TextureAtlas {
+                                    layout: texture_atlas_handle.clone(),
+                                    index: helper.index(uvec2(0,37)),
+                                },
+                            ),
+                            Transform::from_translation(vec3(
+                                (pos.0 * 32) as f32,
+                                (pos.1 * 32) as f32,
+                                0.,
+                            )),
+                        ));
                     }
                 }
             });
