@@ -94,7 +94,7 @@ impl<T> Matrix<T> {
 
     pub fn keys(&self) -> Vec<(usize, usize)> {
         let mut data = vec![];
-        data.reserve_exact(self.rows*self.cols);
+        data.reserve_exact(self.rows * self.cols);
         for idy in 0..self.rows {
             for idx in 0..self.cols {
                 data.push((idx, idy))
@@ -111,6 +111,12 @@ impl<T> Matrix<T> {
     /// Iterates over all elements mutably
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         self.data.iter_mut()
+    }
+}
+
+impl<T: Default + Clone> Matrix<T> {
+    pub fn default(cols: usize, rows: usize) -> Self {
+        Self::new(cols, rows, T::default())
     }
 }
 

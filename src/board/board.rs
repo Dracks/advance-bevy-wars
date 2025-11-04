@@ -5,13 +5,14 @@ use auto_tiler::{AutoTiler, BoardTrait, Neighbor};
 use bevy::{prelude::*, render::render_resource::encase::private::Length};
 
 use crate::{
-    assets::FileAssets, board::{
+    assets::FileAssets,
+    board::{
         direction::Direction,
         map::{Map, Terrain},
         terrain::TileTerrain,
-    }, matrix::Matrix
+    },
+    matrix::Matrix,
 };
-
 
 #[derive(Component)]
 pub struct MainBoard;
@@ -44,9 +45,9 @@ impl BoardLayer {
         fill: Option<TileTerrain>,
     ) -> Self {
         let mut tiles = HashMap::new();
-        for (x,y) in map.keys() {
+        for (x, y) in map.keys() {
             let coord = uvec2(x as u32, y as u32);
-            let tile = map[(x,y)];
+            let tile = map[(x, y)];
             if required.contains(&tile) {
                 tiles.insert(coord, tile.clone());
             } else if let Some(default) = fill {
@@ -82,19 +83,24 @@ impl BoardTrait<TileTerrain, UVec2, Direction> for BoardLayer {
 impl Board {
     fn new(map: Map) -> Self {
         let layers = {
-            let tiles : Matrix<TileTerrain> = (&map).into();
+            let tiles: Matrix<TileTerrain> = (&map).into();
             [
-            BoardLayer::build(
-                &tiles,
-                &HashSet::from([TileTerrain::Plain, TileTerrain::Sea, TileTerrain::Road, TileTerrain::Beach]),
-                Some(TileTerrain::Plain),
-            ),
-            BoardLayer::build(
-                &tiles,
-                &HashSet::from([TileTerrain::Mountain, TileTerrain::Forest]),
-                None,
-            ),
-        ]
+                BoardLayer::build(
+                    &tiles,
+                    &HashSet::from([
+                        TileTerrain::Plain,
+                        TileTerrain::Sea,
+                        TileTerrain::Road,
+                        TileTerrain::Beach,
+                    ]),
+                    Some(TileTerrain::Plain),
+                ),
+                BoardLayer::build(
+                    &tiles,
+                    &HashSet::from([TileTerrain::Mountain, TileTerrain::Forest]),
+                    None,
+                ),
+            ]
         };
         let width = map.width();
         let height = map.height();
@@ -102,23 +108,13 @@ impl Board {
         Self {
             map,
             layers: layers.into(),
-            buildings: Matrix::new(width, height, None),
-            units: Matrix::new(width, height, None)
+            buildings: Matrix::default(width, height),
+            units: Matrix::default(width, height),
         }
     }
     pub fn get_size(&self) -> (usize, usize) {
         self.map.get_size()
     }
-/*
-    pub fn fill(width: usize, height: usize, terrain: TileTerrain) -> Self {
-        Self {
-            width,
-            height,
-            terrains: vec![vec![terrain; width]; height],
-            layers: Default::default(),
-        }
-    }
-*/
 
     pub fn get(&self, pos: &UVec2) -> Option<&Terrain> {
         let x = pos.x as usize;
@@ -126,7 +122,7 @@ impl Board {
         if x >= self.map.width() || y >= self.map.height() {
             return None;
         }
-        self.map.get((x,y)).map(|cell| &cell.terrain)
+        self.map.get((x, y)).map(|cell| &cell.terrain)
     }
 
     pub fn spawn_terrain(
@@ -145,7 +141,6 @@ impl Board {
         };
         let board = Board::new(map.clone());
 
-
         let texture_handle = FileAssets::ImagesGameTerrainPng.load(&assets);
         let texture_atlas = helper.atlas_layout(UVec2::splat(32));
         let texture_atlas_handle = texture_atlases.add(texture_atlas);
@@ -156,8 +151,10 @@ impl Board {
             .with_children(|parent| {
                 for pos in board.map.cells.keys() {
                     for (idx, layer) in board.layers.iter().enumerate() {
-                        if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(&*layer, (pos.0 as u32, pos.1 as u32).into())
-                        {
+                        if let Some(tile_coords) = auto_tiler.get_tile::<UVec2, Direction>(
+                            &*layer,
+                            (pos.0 as u32, pos.1 as u32).into(),
+                        ) {
                             parent.spawn((
                                 Sprite::from_atlas_image(
                                     texture_handle.clone(),
@@ -177,7 +174,6 @@ impl Board {
                 }
             });
         commands.insert_resource(board);
-
     }
 }
 

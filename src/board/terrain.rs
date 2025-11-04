@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use auto_tiler::{AsMask, AutoTiler, Requirement, TileDefinition};
 use bevy::math::{UVec2, uvec2};
 
-use crate::board::{direction::Direction, map::Terrain, map::Terrain::{*}};
+use crate::board::{direction::Direction, map::Terrain, map::Terrain::*};
 
 #[derive(Debug, Eq, Clone, Copy, PartialEq, Default, PartialOrd, Hash)]
 pub enum TileTerrain {

@@ -5,9 +5,9 @@ mod animations;
 mod assets;
 mod board;
 mod interactive;
+mod matrix;
 mod menus;
 mod ui;
-mod matrix;
 
 use crate::{
     board::{Board, BoardPlugin, ShowBoard},

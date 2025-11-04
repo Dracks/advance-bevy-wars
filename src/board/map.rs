@@ -5,7 +5,11 @@ use bevy::{
 use thiserror::Error;
 use toml::Table;
 
-use crate::{board::terrain::TileTerrain, interactive::{Income, Life, Owner}, matrix::Matrix};
+use crate::{
+    board::terrain::TileTerrain,
+    interactive::{Income, Life, Owner},
+    matrix::Matrix,
+};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Terrain {
@@ -81,7 +85,7 @@ impl TryFrom<&str> for UnitType {
         match value.to_lowercase().as_str() {
             "infantry" => Ok(Self::Infantry),
             "mech" => Ok(Self::Mech),
-            _ => Err(UnknownUnitType)
+            _ => Err(UnknownUnitType),
         }
     }
 }
@@ -95,7 +99,11 @@ pub struct MapCell {
 
 impl Default for MapCell {
     fn default() -> Self {
-        MapCell { terrain: Terrain::Plane, building: None, unit: None }
+        MapCell {
+            terrain: Terrain::Plane,
+            building: None,
+            unit: None,
+        }
     }
 }
 
@@ -107,7 +115,7 @@ pub struct Map {
 impl Map {
     pub fn empty() -> Self {
         Self {
-            cells: Matrix::new(1, 1, MapCell::default())
+            cells: Matrix::new(1, 1, MapCell::default()),
         }
     }
     pub fn width(&self) -> usize {
@@ -118,7 +126,7 @@ impl Map {
         self.cells.rows()
     }
 
-    pub fn get_size(&self)-> (usize, usize) {
+    pub fn get_size(&self) -> (usize, usize) {
         self.cells.size()
     }
 
@@ -129,8 +137,13 @@ impl Map {
 
 impl Into<Matrix<TileTerrain>> for &Map {
     fn into(self) -> Matrix<TileTerrain> {
-        let new_cells : Vec<_> = self.cells.iter().map(|cell| TileTerrain::from(&cell.terrain)).collect();
-        Matrix::from_vec(new_cells, self.cells.cols(), self.cells.rows()).expect("Matrix should be valid")
+        let new_cells: Vec<_> = self
+            .cells
+            .iter()
+            .map(|cell| TileTerrain::from(&cell.terrain))
+            .collect();
+        Matrix::from_vec(new_cells, self.cells.cols(), self.cells.rows())
+            .expect("Matrix should be valid")
     }
 }
 
@@ -174,35 +187,48 @@ impl AssetLoader for MapAssetLoader {
 }
 
 fn parse_position(key: &str) -> Option<(usize, usize)> {
-    let coords : Vec<_> = key.split('x').collect();
-    if coords.len()<2 {
+    let coords: Vec<_> = key.split('x').collect();
+    if coords.len() < 2 {
         None
     } else {
-        let x : usize = coords[0].parse().unwrap();
-        let y : usize = coords[1].parse().unwrap();
-        if x==0 || y ==0 {
+        let x: usize = coords[0].parse().unwrap();
+        let y: usize = coords[1].parse().unwrap();
+        if x == 0 || y == 0 {
             None
         } else {
-        Some((x-1, y-1))
+            Some((x - 1, y - 1))
         }
     }
 }
 fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
     let Some(owner_id) = unit_source.get("owner").map(|d| d.as_integer()).flatten() else {
-        return Err(MapLoaderError::ParseError("Owner ID is required and should be a positive number".into()));
+        return Err(MapLoaderError::ParseError(
+            "Owner ID is required and should be a positive number".into(),
+        ));
     };
-    if owner_id <1 {
-        return Err(MapLoaderError::ParseError("Owner Id must be equals or greater than 1 for units".into()));
+    if owner_id < 1 {
+        return Err(MapLoaderError::ParseError(
+            "Owner Id must be equals or greater than 1 for units".into(),
+        ));
     };
 
     let Some(unit_type) = unit_source.get("type").map(|d| d.as_str()).flatten() else {
-        return Err(MapLoaderError::ParseError("Unit type must be specified".into()));
+        return Err(MapLoaderError::ParseError(
+            "Unit type must be specified".into(),
+        ));
     };
-    let unit_type = UnitType::try_from(unit_type).map_err(|_err| MapLoaderError::ParseError(format!("Invalid unit type: {unit_type}")))?;
+    let unit_type = UnitType::try_from(unit_type)
+        .map_err(|_err| MapLoaderError::ParseError(format!("Invalid unit type: {unit_type}")))?;
 
-    let health = unit_source.get("life").map(|d| d.as_integer()).flatten().unwrap_or(100);
-    if health <1 {
-        return Err(MapLoaderError::ParseError("Life of a unit must be greater than 0".into()));
+    let health = unit_source
+        .get("life")
+        .map(|d| d.as_integer())
+        .flatten()
+        .unwrap_or(100);
+    if health < 1 {
+        return Err(MapLoaderError::ParseError(
+            "Life of a unit must be greater than 0".into(),
+        ));
     }
 
     Ok(Unit {
@@ -210,15 +236,18 @@ fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
         health: Life(health as u8),
         unit_type,
     })
-
 }
 fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
     let Some(width) = map_source.get("width").map(|d| d.as_integer()).flatten() else {
-        return Err(MapLoaderError::ParseError("Missing width or is not an integer".into()))
+        return Err(MapLoaderError::ParseError(
+            "Missing width or is not an integer".into(),
+        ));
     };
 
     let Some(height) = map_source.get("height").map(|d| d.as_integer()).flatten() else {
-        return Err(MapLoaderError::ParseError("Missing height or is not an integer".into()))
+        return Err(MapLoaderError::ParseError(
+            "Missing height or is not an integer".into(),
+        ));
     };
     let width = width as usize;
     let height = height as usize;
@@ -226,24 +255,38 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
     let mut map = Matrix::new(width, height, MapCell::default());
 
     let Some(terrain) = map_source.get("terrain").map(|d| d.as_array()).flatten() else {
-        return Err(MapLoaderError::ParseError("Missing terrain or is not an array".into()))
+        return Err(MapLoaderError::ParseError(
+            "Missing terrain or is not an array".into(),
+        ));
     };
     if terrain.len() != height {
-        return Err(MapLoaderError::ParseError(format!("Invalid terrain height {}, it doesn't match the property height {height}", terrain.len())))
+        return Err(MapLoaderError::ParseError(format!(
+            "Invalid terrain height {}, it doesn't match the property height {height}",
+            terrain.len()
+        )));
     }
-    for idy in 0..height{
+    for idy in 0..height {
         let Some(terrain_row) = terrain[idy].as_array() else {
-            return Err(MapLoaderError::ParseError(format!("Invalid terrain, row {idy} is not an array")));
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid terrain, row {idy} is not an array"
+            )));
         };
         if terrain_row.len() != width {
-            return Err(MapLoaderError::ParseError(format!("Invalid terrain width {} at row {idy}, it doesn't match the property width {width}", terrain_row.len())));
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid terrain width {} at row {idy}, it doesn't match the property width {width}",
+                terrain_row.len()
+            )));
         }
         for idx in 0..width {
             let Some(cell) = terrain_row[idx].as_str() else {
-                return Err(MapLoaderError::ParseError(format!("Invalid terrain at ({idx}, {idy})")));
+                return Err(MapLoaderError::ParseError(format!(
+                    "Invalid terrain at ({idx}, {idy})"
+                )));
             };
-            let terrain_cell = Terrain::try_from(cell).map_err(|err| MapLoaderError::ParseError(format!("Unknown terrain type {}", err.0)))?;
-             map[(idx,idy)] = MapCell {
+            let terrain_cell = Terrain::try_from(cell).map_err(|err| {
+                MapLoaderError::ParseError(format!("Unknown terrain type {}", err.0))
+            })?;
+            map[(idx, idy)] = MapCell {
                 terrain: terrain_cell,
                 building: None,
                 unit: None,
@@ -252,22 +295,33 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
     }
 
     let empty_list = Table::new();
-    let units = map_source.get("units").map(|units| units.as_table()).flatten().unwrap_or(&empty_list);
+    let units = map_source
+        .get("units")
+        .map(|units| units.as_table())
+        .flatten()
+        .unwrap_or(&empty_list);
     for (key, value) in units.iter() {
         let Some(coords) = parse_position(key) else {
-            return Err(MapLoaderError::ParseError(format!("Invalid coord in units: {key}")));
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid coord in units: {key}"
+            )));
         };
-        if coords.0>width || coords.1>height {
-            return Err(MapLoaderError::ParseError(format!("Invalid coords {:?}, they are bigger than ({},{})", coords, width, height)))
+        if coords.0 > width || coords.1 > height {
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid coords {:?}, they are bigger than ({},{})",
+                coords, width, height
+            )));
         }
         let Some(unit_data) = value.as_table() else {
-            return Err(MapLoaderError::ParseError(format!("Invalid contents in units coords {:?}", coords)));
+            return Err(MapLoaderError::ParseError(format!(
+                "Invalid contents in units coords {:?}",
+                coords
+            )));
         };
         map[coords].unit = Some(parse_v1_unit(unit_data)?)
     }
 
-
-    Ok(Map{ cells: map })
+    Ok(Map { cells: map })
 }
 
 fn parse_map(content: &str) -> Result<Map, MapLoaderError> {
@@ -275,14 +329,18 @@ fn parse_map(content: &str) -> Result<Map, MapLoaderError> {
         bevy::log::error!("Error loading map {err}");
         MapLoaderError::ParseError("Invalid file format".into())
     })?;
-    let version = raw_file.get("version").map_or_else(|| Err(MapLoaderError::ParseError("Version not found".into())), |data| Ok(data.as_integer()))?;
+    let version = raw_file.get("version").map_or_else(
+        || Err(MapLoaderError::ParseError("Version not found".into())),
+        |data| Ok(data.as_integer()),
+    )?;
 
     match version {
         Some(1) => parse_v1(&raw_file),
-        _ => Err(MapLoaderError::ParseError(format!("Unsupported map version {:?}", version).into()))
+        _ => Err(MapLoaderError::ParseError(
+            format!("Unsupported map version {:?}", version).into(),
+        )),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -298,7 +356,7 @@ mod tests {
         let res = parse_map(data);
         println!("return {:?}", res);
         assert!(res.is_ok());
-        assert_eq!(res.unwrap().cells[(0,0)].terrain, Terrain::Plane);
+        assert_eq!(res.unwrap().cells[(0, 0)].terrain, Terrain::Plane);
     }
 
     #[test]
@@ -319,7 +377,21 @@ mod tests {
         println!("Map: {:?}", map);
         assert!(map.is_ok());
         let map = map.unwrap();
-        assert_eq!(map.cells[(0,0)].unit, Some(Unit{owner: Owner(1), health: Life(100), unit_type: UnitType::Infantry}));
-        assert_eq!(map.cells[(0,1)].unit, Some(Unit{owner: Owner(2), health: Life(50), unit_type: UnitType::Mech}));
+        assert_eq!(
+            map.cells[(0, 0)].unit,
+            Some(Unit {
+                owner: Owner(1),
+                health: Life(100),
+                unit_type: UnitType::Infantry
+            })
+        );
+        assert_eq!(
+            map.cells[(0, 1)].unit,
+            Some(Unit {
+                owner: Owner(2),
+                health: Life(50),
+                unit_type: UnitType::Mech
+            })
+        );
     }
 }
