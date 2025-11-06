@@ -26,3 +26,4 @@ terrain = [
 
 [units]
 2x2 = {type="infantry", owner=1}
+1x1 = {type="infantry", owner=1}

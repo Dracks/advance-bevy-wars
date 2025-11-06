@@ -3,6 +3,21 @@ use bevy::prelude::*;
 pub type PlayerId = u8;
 pub type CapturePoints = u8;
 
+#[derive(Component, Debug, Clone, Copy, Deref, DerefMut)]
+pub struct BoardPos(pub UVec2);
+
+impl BoardPos {
+    pub fn get_screen_pos(&self, layer: i32) -> Vec3 {
+        vec3((self.x * 32) as f32, (self.y * 32) as f32, layer as f32)
+    }
+}
+
+impl From<(usize, usize)> for BoardPos {
+    fn from(value: (usize, usize)) -> Self {
+        Self(uvec2(value.0 as u32, value.1 as u32))
+    }
+}
+
 #[derive(Component, Debug, PartialEq, Clone, Copy)]
 pub struct Owner(pub PlayerId);
 

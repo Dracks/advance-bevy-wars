@@ -69,11 +69,11 @@ impl TryFrom<&str> for BuildingType {
     type Error = UnknownBuildingType;
 
     fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
-        match value.to_lowercase().as_str(){
+        match value.to_lowercase().as_str() {
             "headquarters" => Ok(Self::Headquarters),
             "city" => Ok(Self::City),
             "factory" => Ok(Self::Factory),
-            _ => Err(UnknownBuildingType)
+            _ => Err(UnknownBuildingType),
         }
     }
 }
@@ -216,18 +216,28 @@ fn parse_position(key: &str) -> Option<(usize, usize)> {
 }
 
 fn parse_v1_building(building_source: &Table) -> Result<Building, MapLoaderError> {
-    let owner_id = building_source.get("owner").map(|d| d.as_integer()).flatten().unwrap_or(0);
+    let owner_id = building_source
+        .get("owner")
+        .map(|d| d.as_integer())
+        .flatten()
+        .unwrap_or(0);
 
     if owner_id < 0 {
-        return Err(MapLoaderError::ParseError("Owner ID must be a positive number".into()))
+        return Err(MapLoaderError::ParseError(
+            "Owner ID must be a positive number".into(),
+        ));
     }
     let Some(building_type) = building_source.get("type").map(|d| d.as_str()).flatten() else {
-        return Err(MapLoaderError::ParseError("Building type must be specified".into()));
+        return Err(MapLoaderError::ParseError(
+            "Building type must be specified".into(),
+        ));
     };
 
-    let build_type = BuildingType::try_from(building_type).map_err(|_err| MapLoaderError::ParseError(format!("Invalid building type: {building_type}")))?;
+    let build_type = BuildingType::try_from(building_type).map_err(|_err| {
+        MapLoaderError::ParseError(format!("Invalid building type: {building_type}"))
+    })?;
 
-    Ok(Building{
+    Ok(Building {
         build_type,
         owner: Owner(owner_id as u8),
         income: Income(1000),

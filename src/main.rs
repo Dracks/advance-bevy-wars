@@ -10,7 +10,7 @@ mod menus;
 mod ui;
 
 use crate::{
-    board::{Board, BoardPlugin, ShowBoard},
+    board::{BoardPlugin, ShowBoard},
     menus::MenusPlugin,
 };
 
