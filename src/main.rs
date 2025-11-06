@@ -4,10 +4,15 @@ use bevy_flair::FlairPlugin;
 mod animations;
 mod assets;
 mod board;
-mod ui;
+mod interactive;
+mod matrix;
 mod menus;
+mod ui;
 
-use crate::{board::{Board, BoardPlugin, ShowBoard}, menus::MenusPlugin};
+use crate::{
+    board::{Board, BoardPlugin, ShowBoard},
+    menus::MenusPlugin,
+};
 
 #[derive(States, Clone, PartialEq, Eq, Hash, Debug, Default)]
 pub enum GameState {
@@ -42,10 +47,8 @@ fn main() {
     app.run();
 }
 
-fn setup(mut commands: Commands, board: Res<Board>) {
-    let board_size = board.get_size();
-    let translation = vec3(board_size.0 as f32, board_size.1 as f32, 0.) * (32. / 2.);
-    commands.spawn((Camera2d, Transform::from_translation(translation)));
+fn setup(mut commands: Commands) {
+    commands.spawn((Camera2d, Transform::default()));
 }
 
 impl ComputedStates for ShowBoard {

@@ -20,8 +20,11 @@ bevy = { workspace = true }
 bevy-inspector-egui = { version = "0.34.0", optional = true }
 bevy_flair = "0.5.0"
 rand = "0.9.2"
-ui_helpers = { git = "https://github.com/Dracks/bevy-helpers.git", rev="4dddc6821a0324b990ef938023750c49110e651e" }
+# ui_helpers = { git = "https://github.com/Dracks/bevy-helpers.git", rev="4dddc6821a0324b990ef938023750c49110e651e" }
+ui_helpers = { path="../bevy_tools/crates/ui_helpers" }
 assets_helper = { git = "https://github.com/Dracks/bevy-helpers.git", rev="4dddc6821a0324b990ef938023750c49110e651e" }
+thiserror = "2.0.17"
+toml = "0.9.8"
 
 [build-dependencies]
 assets_generator = { git = "https://github.com/Dracks/bevy-helpers.git", rev="4dddc6821a0324b990ef938023750c49110e651e" }

@@ -8,7 +8,7 @@ mod main_menu;
 #[source(GameState = GameState::Menus)]
 pub enum Menus {
     #[default]
-    MainMenu
+    MainMenu,
 }
 
 pub struct MenusPlugin;
