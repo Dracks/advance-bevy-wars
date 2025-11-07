@@ -49,9 +49,9 @@ impl TryFrom<&str> for Terrain {
 }
 #[derive(Debug, Clone, Copy)]
 pub struct Building {
-    owner: Owner,
-    income: Income,
-    build_type: BuildingType,
+    pub owner: Owner,
+    pub income: Income,
+    pub build_type: BuildingType,
 }
 #[derive(Debug, Clone, Copy)]
 pub enum BuildingType {
@@ -79,9 +79,9 @@ impl TryFrom<&str> for BuildingType {
 }
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Unit {
-    owner: Owner,
-    health: Life,
-    unit_type: UnitType,
+    pub owner: Owner,
+    pub health: Life,
+    pub unit_type: UnitType,
 }
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum UnitType {

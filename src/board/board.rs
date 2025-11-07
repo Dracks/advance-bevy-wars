@@ -1,5 +1,4 @@
 use std::{
-    cell,
     collections::{HashMap, HashSet},
 };
 
@@ -11,7 +10,7 @@ use crate::{
     assets::FileAssets,
     board::{
         direction::Direction,
-        map::{Map, Terrain},
+        map::{Building, Map, Terrain, Unit},
         terrain::TileTerrain,
     },
     interactive::BoardPos,
@@ -28,9 +27,14 @@ pub struct Tiler(pub AutoTiler<TileTerrain, UVec2>);
 pub struct Board {
     map: Map,
     layers: Vec<BoardLayer>,
-    buildings: Matrix<Option<Entity>>,
-    units: Matrix<Option<Entity>>,
+    pub buildings: HashMap<UVec2, Building>,
+    pub units: HashMap<UVec2, Unit>,
 }
+
+#[derive(Component)]
+pub struct BuildingCompoent;
+#[derive(Component)]
+pub struct UnitComponent;
 
 impl Default for Board {
     fn default() -> Self {
@@ -106,14 +110,33 @@ impl Board {
                 ),
             ]
         };
-        let width = map.width();
-        let height = map.height();
+
+        let buildings = map.cells.keys().iter().map(|pos| (pos, map.cells.get(pos.0, pos.1))).filter_map(|(pos, data)| {
+            match data {
+                Some(cell) => match cell.building {
+                    Some(building) => Some((uvec2(pos.0 as u32, pos.1 as u32), building)),
+                    None => None
+                }
+                None => None
+            }
+        }).collect();
+
+        let units = map.cells.keys().iter().map(|pos| (pos, map.cells.get(pos.0, pos.1))).filter_map(|(pos, data)| {
+            match data {
+                Some(cell) => match cell.unit {
+                    Some(unit) => Some((uvec2(pos.0 as u32, pos.1 as u32), unit)),
+                    None => None
+                }
+                None => None
+            }
+        }).collect();
+
 
         Self {
             map,
             layers: layers.into(),
-            buildings: Matrix::default(width, height),
-            units: Matrix::default(width, height),
+            buildings,
+            units,
         }
     }
     pub fn get_size(&self) -> (usize, usize) {
@@ -183,6 +206,7 @@ impl Board {
                     if let Some(unit) = cell_info.unit {
                         bevy::log::info!("We have units! {:?}", unit);
                         parent.spawn((
+                            UnitComponent,
                             board_position.clone(),
                             Sprite::from_atlas_image(
                                 unit_handle.clone(),
@@ -197,6 +221,8 @@ impl Board {
                     if let Some(building) = cell_info.building {
                         bevy::log::info!("We have buildings! {:?}", building);
                         parent.spawn((
+                            BuildingCompoent,
+                            board_position.clone(),
                             Sprite::from_atlas_image(
                                 texture_handle.clone(),
                                 TextureAtlas {

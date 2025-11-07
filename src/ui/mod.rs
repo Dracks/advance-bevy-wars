@@ -7,7 +7,7 @@ use crate::{
     GameState,
     animations::{AnimationIndices, AnimationTimer},
     assets::FileAssets,
-    board::{Board, BoardLoad, ShowBoard},
+    board::{Board, BoardLoad, ShowBoard}, interactive::BoardPos,
 };
 
 pub struct UiPlugin;
@@ -127,6 +127,14 @@ fn update_game_ui(
     for msg in hover_reader.read() {
         if let Some(terrain) = board.get(&msg.cell) {
             *writer.text(*tile_info, 1) = format!("{:?}\n", terrain);
+        }
+        match board.buildings.get(&msg.cell) {
+            Some (building) => *writer.text(*tile_info, 2) = format!("{:?}\n", building.build_type),
+            None => *writer.text(*tile_info, 2) = "".into(),
+        };
+        match board.units.get(&msg.cell) {
+            Some(unit) => *writer.text(*tile_info, 3) = format!("{:?}\n", unit.unit_type),
+            None => *writer.text(*tile_info, 3) = "".into()
         }
     }
 }
