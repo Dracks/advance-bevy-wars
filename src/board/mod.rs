@@ -7,8 +7,10 @@ mod map;
 mod terrain;
 
 use bevy_flair::style::components::NodeStyleSheet;
-pub use board::Board;
+pub use board::*;
+pub use map::*;
 use ui_helpers::prelude::*;
+pub use direction::*;
 
 use crate::{
     assets::FileAssets,

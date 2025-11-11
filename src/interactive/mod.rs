@@ -18,6 +18,12 @@ impl From<(usize, usize)> for BoardPos {
     }
 }
 
+impl From<UVec2> for BoardPos {
+    fn from (value: UVec2) -> Self {
+        Self(value)
+    }
+}
+
 #[derive(Component, Debug, PartialEq, Clone, Copy)]
 pub struct Owner(pub PlayerId);
 

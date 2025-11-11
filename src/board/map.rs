@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::{
     asset::{AssetLoader, LoadContext, io::Reader},
     prelude::*,
@@ -6,7 +8,7 @@ use thiserror::Error;
 use toml::Table;
 
 use crate::{
-    board::terrain::TileTerrain,
+    board::{Board, Direction, terrain::TileTerrain},
     interactive::{Income, Life, Owner},
     matrix::Matrix,
 };
@@ -83,12 +85,63 @@ pub struct Unit {
     pub health: Life,
     pub unit_type: UnitType,
 }
+
+impl Unit {
+    pub fn get_movements(&self,pos:UVec2, board: &Board) -> Vec<PossibleMovement> {
+        let mut movements : HashMap<UVec2, PossibleMovement> = HashMap::default();
+        let mut pending_check = vec![PossibleMovement{
+            cost: 0,
+            layer: 0,
+            position: pos,
+        }];
+        while let Some(to_check) = pending_check.pop() {
+            let is_new_or_better = match movements.get(&to_check.position) {
+                Some(existing) => existing.cost>to_check.cost,
+                None => true
+            };
+            if is_new_or_better {
+                for dir in Direction::ADJACENT {
+                    bevy::log::info!("Direction: {:?}", dir);
+                    let Some(new_pos) = dir.move_point(&to_check.position) else {
+                        continue
+                    };
+                    let new_cost = to_check.cost + 10;
+                    bevy::log::info!("New Cost: {}", new_cost);
+                    if new_cost < 100{
+                        pending_check.push(PossibleMovement { position: new_pos, layer: to_check.layer+1, cost: new_cost });
+                    }
+                }
+                movements.insert(to_check.position, to_check);
+            }
+        }
+        bevy::log::info!("We have possible movements! {}", movements.len());
+        movements.into_iter().map(|(_, movement)| movement).collect()
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum UnitType {
     Infantry,
     Mech,
     Reccon,
     Tank,
+}
+
+pub struct PossibleMovement {
+    pub position: UVec2,
+    pub layer: u32,
+    pub cost: u32
+}
+
+impl UnitType {
+    pub fn get_movement(&self) -> u32 {
+        match self {
+            Self::Infantry => 30,
+            Self::Mech => 25,
+            Self::Reccon => 50,
+            Self::Tank => 45,
+        }
+    }
 }
 
 pub struct UnknownUnitType;
