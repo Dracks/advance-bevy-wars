@@ -9,7 +9,7 @@ use toml::Table;
 
 use crate::{
     board::{Board, Direction, terrain::TileTerrain},
-    interactive::{Income, Life, Owner},
+    interactive::{Income, Life, Movement, MovementType, Owner},
     matrix::Matrix,
 };
 
@@ -84,6 +84,7 @@ pub struct Unit {
     pub owner: Owner,
     pub health: Life,
     pub unit_type: UnitType,
+    pub movement: Movement,
 }
 
 impl Unit {
@@ -94,6 +95,7 @@ impl Unit {
             layer: 0,
             position: pos,
         }];
+        let total_movement = self.movement.movements;
         while let Some(to_check) = pending_check.pop() {
             let is_new_or_better = match movements.get(&to_check.position) {
                 Some(existing) => existing.cost>to_check.cost,
@@ -105,9 +107,15 @@ impl Unit {
                     let Some(new_pos) = dir.move_point(&to_check.position) else {
                         continue
                     };
-                    let new_cost = to_check.cost + 10;
+                    let Some(terrain) = board.get(&new_pos) else {
+                        continue;
+                    };
+                    let Some(move_cost) = self.movement.mov_type.cost(terrain) else {
+                        continue;
+                    };
+                    let new_cost = to_check.cost + move_cost;
                     bevy::log::info!("New Cost: {}", new_cost);
-                    if new_cost < 100{
+                    if new_cost < total_movement{
                         pending_check.push(PossibleMovement { position: new_pos, layer: to_check.layer+1, cost: new_cost });
                     }
                 }
@@ -331,6 +339,7 @@ fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
         owner: Owner(owner_id as u8),
         health: Life(health as u8),
         unit_type,
+        movement: Movement { mov_type: MovementType::Foot, movements: 40 }
     })
 }
 fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
@@ -505,7 +514,11 @@ mod tests {
             Some(Unit {
                 owner: Owner(1),
                 health: Life(100),
-                unit_type: UnitType::Infantry
+                unit_type: UnitType::Infantry,
+                movement: Movement{
+                    mov_type: MovementType::Foot,
+                    movements: 30,
+                }
             })
         );
         assert_eq!(
@@ -513,7 +526,11 @@ mod tests {
             Some(Unit {
                 owner: Owner(2),
                 health: Life(50),
-                unit_type: UnitType::Mech
+                unit_type: UnitType::Mech,
+                movement: Movement {
+                    mov_type: MovementType::Foot,
+                    movements: 30,
+                }
             })
         );
     }

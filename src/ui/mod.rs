@@ -118,7 +118,8 @@ fn setup_game_ui(
         GameUI,
         children![
             TextSpan(format!("\n")),
-            TextSpan(format!("\n",)),
+            TextSpan(format!("\n")),
+            TextSpan(format!("\n")),
             TextSpan(format!("\n")),
         ],
     ));
@@ -131,16 +132,17 @@ fn update_game_ui(
     board: Res<Board>,
 ) {
     for msg in hover_reader.read() {
+        *writer.text(*tile_info, 1) = format!("({},{})\n", msg.cell.x, msg.cell.y);
         if let Some(terrain) = board.get(&msg.cell) {
-            *writer.text(*tile_info, 1) = format!("{:?}\n", terrain);
+            *writer.text(*tile_info, 2) = format!("{:?}\n", terrain);
         }
         match board.buildings.get(&msg.cell) {
-            Some (building) => *writer.text(*tile_info, 2) = format!("{:?}\n", building.build_type),
-            None => *writer.text(*tile_info, 2) = "".into(),
+            Some (building) => *writer.text(*tile_info, 3) = format!("{:?}\n", building.build_type),
+            None => *writer.text(*tile_info, 3) = "".into(),
         };
         match board.units.get(&msg.cell) {
-            Some(unit) => *writer.text(*tile_info, 3) = format!("{:?}\n", unit.unit_type),
-            None => *writer.text(*tile_info, 3) = "".into()
+            Some(unit) => *writer.text(*tile_info, 4) = format!("{:?}\n", unit.unit_type),
+            None => *writer.text(*tile_info, 4) = "".into()
         }
     }
 }

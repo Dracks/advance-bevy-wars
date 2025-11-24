@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::board::Terrain;
+
 pub type PlayerId = u8;
 pub type CapturePoints = u8;
 
@@ -91,13 +93,32 @@ impl Capture {
 // Will be nice to be able to force to have owner
 pub struct Income(pub u32);
 
-enum MovementType {
-    foot,
-    weels,
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum MovementType {
+    Foot,
+    Weels,
 }
 
-#[derive(Component)]
+impl MovementType {
+    fn foot_costs(terrain: &Terrain) -> Option<u32> {
+        match terrain {
+            Terrain::Plane => Some(10),
+            Terrain::Forest => Some(15),
+            Terrain::Road => Some(10),
+            Terrain::Mountain => Some(20),
+            _ => None
+        }
+    }
+    pub fn cost(&self, terrain: &Terrain) -> Option<u32> {
+        match self {
+            Self::Foot => MovementType::foot_costs(terrain),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Movement {
-    mov_type: MovementType,
-    movements: u8,
+    pub mov_type: MovementType,
+    pub movements: u32,
 }
