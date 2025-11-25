@@ -20,6 +20,8 @@ terrain = [
     ["p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "f", "f"],
     ["p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "p", "f", "f"],
 ]
+players = 2
+
 [buildings]
 1x1 = {type="city"}
 3x1 = {owner=1, type="headquarters"}

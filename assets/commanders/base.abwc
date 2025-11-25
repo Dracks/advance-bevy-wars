@@ -1,0 +1,11 @@
+version=1
+name="Base Commander"
+
+[infantery]
+cost = 100
+movement = 100
+armor = 100
+
+[infantery.movement]
+plane = 10
+road = 10

@@ -5,6 +5,7 @@ mod board;
 mod direction;
 mod map;
 mod terrain;
+mod player;
 
 use bevy_flair::style::components::NodeStyleSheet;
 pub use board::*;

@@ -9,11 +9,11 @@ use toml::Table;
 
 use crate::{
     board::{Board, Direction, terrain::TileTerrain},
-    interactive::{Income, Life, Movement, MovementType, Owner},
+    interactive::{Income, Life, Movement, Owner},
     matrix::Matrix,
 };
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Hash, Clone, Copy, Eq)]
 pub enum Terrain {
     Plane,
     Road,
@@ -79,12 +79,12 @@ impl TryFrom<&str> for BuildingType {
         }
     }
 }
-#[derive(Debug, PartialEq, Clone, Copy)]
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Unit {
     pub owner: Owner,
     pub health: Life,
     pub unit_type: UnitType,
-    pub movement: Movement,
 }
 
 impl Unit {
@@ -95,7 +95,12 @@ impl Unit {
             layer: 0,
             position: pos,
         }];
-        let total_movement = self.movement.movements;
+        let Some(player) = board.get_player(self.owner.0 as usize) else {
+            bevy::log::error!("Player not found {} in board", self.owner.0);
+            return vec![]
+        };
+        let movement = &player.current_states.get(self.unit_type).movement;
+        let total_movement = movement.movements;
         while let Some(to_check) = pending_check.pop() {
             let is_new_or_better = match movements.get(&to_check.position) {
                 Some(existing) => existing.cost>to_check.cost,
@@ -110,7 +115,7 @@ impl Unit {
                     let Some(terrain) = board.get(&new_pos) else {
                         continue;
                     };
-                    let Some(move_cost) = self.movement.mov_type.cost(terrain) else {
+                    let Some(move_cost) = movement.costs.get(terrain) else {
                         continue;
                     };
                     let new_cost = to_check.cost + move_cost;
@@ -131,7 +136,7 @@ impl Unit {
 pub enum UnitType {
     Infantry,
     Mech,
-    Reccon,
+    Recon,
     Tank,
 }
 
@@ -139,17 +144,6 @@ pub struct PossibleMovement {
     pub position: UVec2,
     pub layer: u32,
     pub cost: u32
-}
-
-impl UnitType {
-    pub fn get_movement(&self) -> u32 {
-        match self {
-            Self::Infantry => 30,
-            Self::Mech => 25,
-            Self::Reccon => 50,
-            Self::Tank => 45,
-        }
-    }
 }
 
 pub struct UnknownUnitType;
@@ -185,12 +179,14 @@ impl Default for MapCell {
 #[derive(Asset, TypePath, Debug, Clone)]
 pub struct Map {
     pub cells: Matrix<MapCell>,
+    pub players: usize,
 }
 
 impl Map {
     pub fn empty() -> Self {
         Self {
             cells: Matrix::new(1, 1, MapCell::default()),
+            players: 2,
         }
     }
     pub fn width(&self) -> usize {
@@ -339,7 +335,6 @@ fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
         owner: Owner(owner_id as u8),
         health: Life(health as u8),
         unit_type,
-        movement: Movement { mov_type: MovementType::Foot, movements: 40 }
     })
 }
 fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
@@ -356,6 +351,12 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
     };
     let width = width as usize;
     let height = height as usize;
+    let Some(players) = map_source.get("players").map(|d| d.as_integer()).flatten() else {
+        return Err(MapLoaderError::ParseError(
+            "Missing players key or is not an integer".into(),
+        ));
+    };
+    let players = players as usize;
 
     let mut map = Matrix::new(width, height, MapCell::default());
 
@@ -453,7 +454,7 @@ fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
         map[coords].building = Some(parse_v1_building(building_data)?)
     }
 
-    Ok(Map { cells: map })
+    Ok(Map { cells: map, players })
 }
 
 fn parse_map(content: &str) -> Result<Map, MapLoaderError> {
@@ -515,10 +516,6 @@ mod tests {
                 owner: Owner(1),
                 health: Life(100),
                 unit_type: UnitType::Infantry,
-                movement: Movement{
-                    mov_type: MovementType::Foot,
-                    movements: 30,
-                }
             })
         );
         assert_eq!(
@@ -527,10 +524,6 @@ mod tests {
                 owner: Owner(2),
                 health: Life(50),
                 unit_type: UnitType::Mech,
-                movement: Movement {
-                    mov_type: MovementType::Foot,
-                    movements: 30,
-                }
             })
         );
     }

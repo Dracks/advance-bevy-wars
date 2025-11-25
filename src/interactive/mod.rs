@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 
 use crate::board::Terrain;
@@ -92,7 +94,7 @@ impl Capture {
 #[derive(Component, Debug, Clone, Copy)]
 // Will be nice to be able to force to have owner
 pub struct Income(pub u32);
-
+/*
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MovementType {
     Foot,
@@ -121,4 +123,42 @@ impl MovementType {
 pub struct Movement {
     pub mov_type: MovementType,
     pub movements: u32,
+}
+*/
+
+#[derive(Clone, Debug)]
+pub struct Movement {
+    pub movements: u32,
+    pub costs: HashMap<Terrain, u32>
+}
+
+
+impl Movement {
+    pub fn infantry() -> Self {
+        Self {
+            movements: 30,
+            costs: HashMap::from([(Terrain::Plane, 10)])
+        }
+    }
+
+    pub fn mech() -> Self {
+        Self {
+            movements: 25,
+            costs: HashMap::from([(Terrain::Plane, 10)])
+        }
+    }
+
+    pub fn recon() -> Self {
+        Self {
+            movements: 30,
+            costs: HashMap::from([(Terrain::Plane, 10)])
+        }
+    }
+
+    pub fn tank() -> Self {
+        Self {
+            movements: 30,
+            costs: HashMap::from([(Terrain::Plane, 10)])
+        }
+    }
 }

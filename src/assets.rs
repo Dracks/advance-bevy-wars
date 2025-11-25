@@ -361,6 +361,8 @@ pub enum FileAssets {
     MenuStyleMenuCss,
     #[allow(dead_code)]
     MapTestAbwm,
+    #[allow(dead_code)]
+    CommandersBaseAbwc,
 }
 
 impl AssetsTrait for FileAssets {
@@ -545,6 +547,7 @@ impl AssetsTrait for FileAssets {
             FileAssets::MenuStyleUiCss => "menu_style/ui.css",
             FileAssets::MenuStyleMenuCss => "menu_style/menu.css",
             FileAssets::MapTestAbwm => "map_test.abwm",
+            FileAssets::CommandersBaseAbwc => "commanders/base.abwc",
         }
     }
 }

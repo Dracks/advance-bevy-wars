@@ -9,9 +9,7 @@ use bevy::{prelude::*, render::render_resource::encase::private::Length};
 use crate::{
     assets::FileAssets,
     board::{
-        direction::Direction,
-        map::{Building, Map, Terrain, Unit},
-        terrain::TileTerrain,
+        direction::Direction, map::{Building, Map, Terrain, Unit}, player::PlayerInfo, terrain::TileTerrain
     },
     interactive::BoardPos,
     matrix::Matrix,
@@ -29,10 +27,11 @@ pub struct Board {
     layers: Vec<BoardLayer>,
     pub buildings: HashMap<UVec2, Building>,
     pub units: HashMap<UVec2, Unit>,
+    pub players: Vec<PlayerInfo>,
 }
 
 #[derive(Component)]
-pub struct BuildingCompoent;
+pub struct BuildingComponent;
 #[derive(Component)]
 pub struct UnitComponent;
 
@@ -131,12 +130,17 @@ impl Board {
             }
         }).collect();
 
+        let mut players = Vec::with_capacity(map.players);
+        for _ in 0..map.players {
+            players.push(PlayerInfo::default());
+        }
 
         Self {
             map,
             layers: layers.into(),
             buildings,
             units,
+            players,
         }
     }
     pub fn get_size(&self) -> (usize, usize) {
@@ -150,6 +154,14 @@ impl Board {
             return None;
         }
         self.map.get((x, y)).map(|cell| &cell.terrain)
+    }
+
+    pub fn get_player(&self, idx: usize) -> Option<&PlayerInfo> {
+        if idx < self.players.len() {
+            Some(&self.players[idx])
+        } else {
+            None
+        }
     }
 
     pub fn spawn_terrain(
@@ -221,7 +233,7 @@ impl Board {
                     if let Some(building) = cell_info.building {
                         bevy::log::info!("We have buildings! {:?}", building);
                         parent.spawn((
-                            BuildingCompoent,
+                            BuildingComponent,
                             board_position.clone(),
                             Sprite::from_atlas_image(
                                 texture_handle.clone(),
