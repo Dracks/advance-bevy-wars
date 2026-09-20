@@ -21,7 +21,7 @@ impl From<(usize, usize)> for BoardPos {
 }
 
 impl From<UVec2> for BoardPos {
-    fn from (value: UVec2) -> Self {
+    fn from(value: UVec2) -> Self {
         Self(value)
     }
 }
@@ -106,7 +106,7 @@ impl MovementType {
             Terrain::Forest => Some(15),
             Terrain::Road => Some(10),
             Terrain::Mountain => Some(20),
-            _ => None
+            _ => None,
         }
     }
     pub fn cost(&self, terrain: &Terrain) -> Option<u32> {

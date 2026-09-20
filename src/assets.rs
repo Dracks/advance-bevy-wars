@@ -6,15 +6,39 @@ pub enum FileAssets {
     #[allow(dead_code)]
     FontsEditundoTtf,
     #[allow(dead_code)]
-    ImagesGamePrimitivesRectPng,
+    ImagesGameCursorHud36X36Png,
+    #[allow(dead_code)]
+    ImagesGameCursorHud38X38Png,
+    #[allow(dead_code)]
+    ImagesGameCursorAttack40X40Png,
+    #[allow(dead_code)]
+    ImagesGameCursorAttack42X42Png,
+    #[allow(dead_code)]
+    ImagesGameEffectsBombPng,
+    #[allow(dead_code)]
+    ImagesGameEffectsExplosionPng,
+    #[allow(dead_code)]
+    ImagesGameEffectsGunattackPng,
+    #[allow(dead_code)]
+    ImagesGameEffectsSmallExplosionPng,
+    #[allow(dead_code)]
+    ImagesGameEffectsTorpedoPng,
+    #[allow(dead_code)]
+    ImagesGameEffectsVulcanCannonPng,
     #[allow(dead_code)]
     ImagesGameGameBackgroundJpg,
     #[allow(dead_code)]
     ImagesGameMenuBackgroundJpg,
     #[allow(dead_code)]
-    ImagesGameTilemapPackedPng,
+    ImagesGameMovementHudPng,
     #[allow(dead_code)]
-    ImagesGameUnitsTankPng,
+    ImagesGamePrimitivesRectPng,
+    #[allow(dead_code)]
+    ImagesGameTerrainPng,
+    #[allow(dead_code)]
+    ImagesGameTilemap2Png,
+    #[allow(dead_code)]
+    ImagesGameTilemapPackedPng,
     #[allow(dead_code)]
     ImagesGameUnitsAntiairPng,
     #[allow(dead_code)]
@@ -52,37 +76,15 @@ pub enum FileAssets {
     #[allow(dead_code)]
     ImagesGameUnitsSupplyshipPng,
     #[allow(dead_code)]
+    ImagesGameUnitsTankPng,
+    #[allow(dead_code)]
     ImagesGameUnitsTcopterPng,
     #[allow(dead_code)]
     ImagesGameUnitsWartankPng,
     #[allow(dead_code)]
-    ImagesGameTilemap2Png,
-    #[allow(dead_code)]
-    ImagesGameEffectsExplosionPng,
-    #[allow(dead_code)]
-    ImagesGameEffectsBombPng,
-    #[allow(dead_code)]
-    ImagesGameEffectsGunattackPng,
-    #[allow(dead_code)]
-    ImagesGameEffectsSmallExplosionPng,
-    #[allow(dead_code)]
-    ImagesGameEffectsTorpedoPng,
-    #[allow(dead_code)]
-    ImagesGameEffectsVulcanCannonPng,
-    #[allow(dead_code)]
-    ImagesGameCursorHud36X36Png,
-    #[allow(dead_code)]
-    ImagesGameCursorHud38X38Png,
-    #[allow(dead_code)]
-    ImagesGameCursorAttack40X40Png,
-    #[allow(dead_code)]
-    ImagesGameCursorAttack42X42Png,
-    #[allow(dead_code)]
-    ImagesGameMovementHudPng,
-    #[allow(dead_code)]
-    ImagesGameTerrainPng,
-    #[allow(dead_code)]
     ImagesIconsNodesCarOutlineSvg,
+    #[allow(dead_code)]
+    ImagesIconsNodesDownloadOutlineSvg,
     #[allow(dead_code)]
     ImagesIconsNodesFlagOutlineSvg,
     #[allow(dead_code)]
@@ -93,8 +95,6 @@ pub enum FileAssets {
     ImagesIconsNodesPersonOutlineSvg,
     #[allow(dead_code)]
     ImagesIconsNodesSettings2OutlineSvg,
-    #[allow(dead_code)]
-    ImagesIconsNodesDownloadOutlineSvg,
     #[allow(dead_code)]
     ImagesIconsUiIconsDefaultPng,
     #[allow(dead_code)]
@@ -118,13 +118,19 @@ pub enum FileAssets {
     #[allow(dead_code)]
     ImagesThemeYellowSheetPng,
     #[allow(dead_code)]
-    MusicsCyberpunkMoonlightSonataV2Mp3,
+    MapTestAbwm,
     #[allow(dead_code)]
-    MusicsAwesomenessWav,
+    MenuStyleUiCss,
+    #[allow(dead_code)]
+    MenuStyleMenuCss,
+    #[allow(dead_code)]
+    MusicsCyberpunkMoonlightSonataV2Mp3,
     #[allow(dead_code)]
     MusicsImmaculateCommandGeorgesDeMorgansThemeCodenameReconMp3,
     #[allow(dead_code)]
     MusicsTempestassAceInTheHoleMinatusLeonusMacrosThemeUnfinishedV08Mp3,
+    #[allow(dead_code)]
+    MusicsAwesomenessWav,
     #[allow(dead_code)]
     SoundsChipsHandle6Ogg,
     #[allow(dead_code)]
@@ -355,23 +361,31 @@ pub enum FileAssets {
     SoundsUiToggle004Ogg,
     #[allow(dead_code)]
     TextCreditsMd,
-    #[allow(dead_code)]
-    MenuStyleUiCss,
-    #[allow(dead_code)]
-    MenuStyleMenuCss,
-    #[allow(dead_code)]
-    MapTestAbwm,
 }
 
 impl AssetsTrait for FileAssets {
     fn path(&self) -> &'static str {
         match self {
             FileAssets::FontsEditundoTtf => "fonts/editundo.ttf",
-            FileAssets::ImagesGamePrimitivesRectPng => "images/game/primitives/rect.png",
+            FileAssets::ImagesGameCursorHud36X36Png => "images/game/cursor hud 36x36.png",
+            FileAssets::ImagesGameCursorHud38X38Png => "images/game/cursor hud 38x38.png",
+            FileAssets::ImagesGameCursorAttack40X40Png => "images/game/cursor_attack_40x40.png",
+            FileAssets::ImagesGameCursorAttack42X42Png => "images/game/cursor_attack_42x42.png",
+            FileAssets::ImagesGameEffectsBombPng => "images/game/effects/bomb.png",
+            FileAssets::ImagesGameEffectsExplosionPng => "images/game/effects/explosion.png",
+            FileAssets::ImagesGameEffectsGunattackPng => "images/game/effects/gunattack.png",
+            FileAssets::ImagesGameEffectsSmallExplosionPng => {
+                "images/game/effects/small_explosion.png"
+            }
+            FileAssets::ImagesGameEffectsTorpedoPng => "images/game/effects/torpedo.png",
+            FileAssets::ImagesGameEffectsVulcanCannonPng => "images/game/effects/vulcan_cannon.png",
             FileAssets::ImagesGameGameBackgroundJpg => "images/game/game/background.jpg",
             FileAssets::ImagesGameMenuBackgroundJpg => "images/game/menu/background.jpg",
+            FileAssets::ImagesGameMovementHudPng => "images/game/movement hud.png",
+            FileAssets::ImagesGamePrimitivesRectPng => "images/game/primitives/rect.png",
+            FileAssets::ImagesGameTerrainPng => "images/game/terrain.png",
+            FileAssets::ImagesGameTilemap2Png => "images/game/tilemap2.png",
             FileAssets::ImagesGameTilemapPackedPng => "images/game/tilemap_packed.png",
-            FileAssets::ImagesGameUnitsTankPng => "images/game/units/tank.png",
             FileAssets::ImagesGameUnitsAntiairPng => "images/game/units/antiair.png",
             FileAssets::ImagesGameUnitsApcPng => "images/game/units/apc.png",
             FileAssets::ImagesGameUnitsArtilleryPng => "images/game/units/artillery.png",
@@ -390,28 +404,22 @@ impl AssetsTrait for FileAssets {
             FileAssets::ImagesGameUnitsRocketlauncherPng => "images/game/units/rocketlauncher.png",
             FileAssets::ImagesGameUnitsSubPng => "images/game/units/sub.png",
             FileAssets::ImagesGameUnitsSupplyshipPng => "images/game/units/supplyship.png",
+            FileAssets::ImagesGameUnitsTankPng => "images/game/units/tank.png",
             FileAssets::ImagesGameUnitsTcopterPng => "images/game/units/tcopter.png",
             FileAssets::ImagesGameUnitsWartankPng => "images/game/units/wartank.png",
-            FileAssets::ImagesGameTilemap2Png => "images/game/tilemap2.png",
-            FileAssets::ImagesGameEffectsExplosionPng => "images/game/effects/explosion.png",
-            FileAssets::ImagesGameEffectsBombPng => "images/game/effects/bomb.png",
-            FileAssets::ImagesGameEffectsGunattackPng => "images/game/effects/gunattack.png",
-            FileAssets::ImagesGameEffectsSmallExplosionPng => "images/game/effects/small_explosion.png",
-            FileAssets::ImagesGameEffectsTorpedoPng => "images/game/effects/torpedo.png",
-            FileAssets::ImagesGameEffectsVulcanCannonPng => "images/game/effects/vulcan_cannon.png",
-            FileAssets::ImagesGameCursorHud36X36Png => "images/game/cursor hud 36x36.png",
-            FileAssets::ImagesGameCursorHud38X38Png => "images/game/cursor hud 38x38.png",
-            FileAssets::ImagesGameCursorAttack40X40Png => "images/game/cursor_attack_40x40.png",
-            FileAssets::ImagesGameCursorAttack42X42Png => "images/game/cursor_attack_42x42.png",
-            FileAssets::ImagesGameMovementHudPng => "images/game/movement hud.png",
-            FileAssets::ImagesGameTerrainPng => "images/game/terrain.png",
             FileAssets::ImagesIconsNodesCarOutlineSvg => "images/icons/nodes/car-outline.svg",
+            FileAssets::ImagesIconsNodesDownloadOutlineSvg => {
+                "images/icons/nodes/download-outline.svg"
+            }
             FileAssets::ImagesIconsNodesFlagOutlineSvg => "images/icons/nodes/flag-outline.svg",
             FileAssets::ImagesIconsNodesLayersOutlineSvg => "images/icons/nodes/layers-outline.svg",
-            FileAssets::ImagesIconsNodesPaperPlaneOutlineSvg => "images/icons/nodes/paper-plane-outline.svg",
+            FileAssets::ImagesIconsNodesPaperPlaneOutlineSvg => {
+                "images/icons/nodes/paper-plane-outline.svg"
+            }
             FileAssets::ImagesIconsNodesPersonOutlineSvg => "images/icons/nodes/person-outline.svg",
-            FileAssets::ImagesIconsNodesSettings2OutlineSvg => "images/icons/nodes/settings-2-outline.svg",
-            FileAssets::ImagesIconsNodesDownloadOutlineSvg => "images/icons/nodes/download-outline.svg",
+            FileAssets::ImagesIconsNodesSettings2OutlineSvg => {
+                "images/icons/nodes/settings-2-outline.svg"
+            }
             FileAssets::ImagesIconsUiIconsDefaultPng => "images/icons/ui/iconsDefault.png",
             FileAssets::ImagesIconsUiSheetBlack1XPng => "images/icons/ui/sheet_black1x.png",
             FileAssets::ImagesIconsUiSheetBlack2XPng => "images/icons/ui/sheet_black2x.png",
@@ -423,10 +431,19 @@ impl AssetsTrait for FileAssets {
             FileAssets::ImagesThemeGreySheetPng => "images/theme/greySheet.png",
             FileAssets::ImagesThemeRedSheetPng => "images/theme/redSheet.png",
             FileAssets::ImagesThemeYellowSheetPng => "images/theme/yellowSheet.png",
-            FileAssets::MusicsCyberpunkMoonlightSonataV2Mp3 => "musics/Cyberpunk Moonlight Sonata v2.mp3",
+            FileAssets::MapTestAbwm => "map_test.abwm",
+            FileAssets::MenuStyleUiCss => "menu_style/ui.css",
+            FileAssets::MenuStyleMenuCss => "menu_style/menu.css",
+            FileAssets::MusicsCyberpunkMoonlightSonataV2Mp3 => {
+                "musics/Cyberpunk Moonlight Sonata v2.mp3"
+            }
+            FileAssets::MusicsImmaculateCommandGeorgesDeMorgansThemeCodenameReconMp3 => {
+                "musics/Immaculate_Command__Georges_DeMorgans_Theme_Codename_RECON.mp3"
+            }
+            FileAssets::MusicsTempestassAceInTheHoleMinatusLeonusMacrosThemeUnfinishedV08Mp3 => {
+                "musics/Tempestass_Ace_in_the_Hole__Minatus_Leonus_Macros_Theme_UNFINISHED_v0.8.mp3"
+            }
             FileAssets::MusicsAwesomenessWav => "musics/awesomeness.wav",
-            FileAssets::MusicsImmaculateCommandGeorgesDeMorgansThemeCodenameReconMp3 => "musics/Immaculate_Command__Georges_DeMorgans_Theme_Codename_RECON.mp3",
-            FileAssets::MusicsTempestassAceInTheHoleMinatusLeonusMacrosThemeUnfinishedV08Mp3 => "musics/Tempestass_Ace_in_the_Hole__Minatus_Leonus_Macros_Theme_UNFINISHED_v0.8.mp3",
             FileAssets::SoundsChipsHandle6Ogg => "sounds/chipsHandle6.ogg",
             FileAssets::SoundsEngineCircular000Ogg => "sounds/engineCircular_000.ogg",
             FileAssets::SoundsExplosionCrunch000Ogg => "sounds/explosionCrunch_000.ogg",
@@ -542,9 +559,6 @@ impl AssetsTrait for FileAssets {
             FileAssets::SoundsUiToggle003Ogg => "sounds/ui/toggle_003.ogg",
             FileAssets::SoundsUiToggle004Ogg => "sounds/ui/toggle_004.ogg",
             FileAssets::TextCreditsMd => "text/credits.md",
-            FileAssets::MenuStyleUiCss => "menu_style/ui.css",
-            FileAssets::MenuStyleMenuCss => "menu_style/menu.css",
-            FileAssets::MapTestAbwm => "map_test.abwm",
         }
     }
 }

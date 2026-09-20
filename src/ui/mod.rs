@@ -1,6 +1,6 @@
 use assets_helper::AssetsTrait;
 use bevy::prelude::*;
-use bevy_flair::style::components::NodeStyleSheet;
+use bevy_flair::style::components::Styled;
 use ui_helpers::prelude::clean_entities;
 
 mod movement;
@@ -9,7 +9,11 @@ use crate::{
     GameState,
     animations::{AnimationIndices, AnimationTimer},
     assets::FileAssets,
-    board::{Board, BoardLoad, ShowBoard}, ui::movement::{ShowMovementUi, ShownPositions, apply_visibility_delayed, on_click_cursor, on_shown_movement},
+    board::{Board, BoardLoad, ShowBoard},
+    ui::movement::{
+        ShowMovementUi, ShownPositions, apply_visibility_delayed, on_click_cursor,
+        on_shown_movement,
+    },
 };
 
 pub struct UiPlugin;
@@ -21,14 +25,16 @@ pub struct HoverCell {
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .insert_resource(ShownPositions::default())
+        app.insert_resource(ShownPositions::default())
             .add_message::<ShowMovementUi>()
             .add_systems(OnEnter(GameState::InGame), setup_game_ui)
             .add_systems(OnExit(GameState::InGame), clean_entities::<GameUI>)
             .add_systems(Update, update_game_ui.run_if(in_state(BoardLoad::Complete)))
             .add_systems(Update, follow_cursor.run_if(in_state(ShowBoard)))
-            .add_systems(Update, (on_shown_movement, on_click_cursor, apply_visibility_delayed))
+            .add_systems(
+                Update,
+                (on_shown_movement, on_click_cursor, apply_visibility_delayed),
+            )
             .add_message::<HoverCell>();
     }
 }
@@ -110,7 +116,7 @@ fn setup_game_ui(
     ));
 
     commands.spawn((
-        NodeStyleSheet::new(FileAssets::MenuStyleUiCss.load(&assets)),
+        Styled::new(FileAssets::MenuStyleUiCss.load(&assets)),
         Text::default(),
         Node::default(),
         Name::new("tile-info"),
@@ -137,12 +143,12 @@ fn update_game_ui(
             *writer.text(*tile_info, 2) = format!("{:?}\n", terrain);
         }
         match board.buildings.get(&msg.cell) {
-            Some (building) => *writer.text(*tile_info, 3) = format!("{:?}\n", building.build_type),
+            Some(building) => *writer.text(*tile_info, 3) = format!("{:?}\n", building.build_type),
             None => *writer.text(*tile_info, 3) = "".into(),
         };
         match board.units.get(&msg.cell) {
             Some(unit) => *writer.text(*tile_info, 4) = format!("{:?}\n", unit.unit_type),
-            None => *writer.text(*tile_info, 4) = "".into()
+            None => *writer.text(*tile_info, 4) = "".into(),
         }
     }
 }

@@ -6,11 +6,11 @@ mod direction;
 mod map;
 mod terrain;
 
-use bevy_flair::style::components::NodeStyleSheet;
+use bevy_flair::style::components::Styled;
 pub use board::*;
+pub use direction::*;
 pub use map::*;
 use ui_helpers::prelude::*;
-pub use direction::*;
 
 use crate::{
     assets::FileAssets,
@@ -65,7 +65,7 @@ fn spawn_loading(mut commands: Commands, assets: Res<AssetServer>) {
 
     commands.insert_resource(loading);
     commands.spawn((
-        NodeStyleSheet::new(FileAssets::MenuStyleMenuCss.load(&assets)),
+        Styled::new(FileAssets::MenuStyleMenuCss.load(&assets)),
         Node::default(),
         Name::new("loading_screen"),
         Loading::new(BoardLoad::Complete),
