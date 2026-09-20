@@ -88,9 +88,9 @@ pub struct Unit {
 }
 
 impl Unit {
-    pub fn get_movements(&self,pos:UVec2, board: &Board) -> Vec<PossibleMovement> {
-        let mut movements : HashMap<UVec2, PossibleMovement> = HashMap::default();
-        let mut pending_check = vec![PossibleMovement{
+    pub fn get_movements(&self, pos: UVec2, board: &Board) -> Vec<PossibleMovement> {
+        let mut movements: HashMap<UVec2, PossibleMovement> = HashMap::default();
+        let mut pending_check = vec![PossibleMovement {
             cost: 0,
             layer: 0,
             position: pos,
@@ -98,14 +98,14 @@ impl Unit {
         let total_movement = self.movement.movements;
         while let Some(to_check) = pending_check.pop() {
             let is_new_or_better = match movements.get(&to_check.position) {
-                Some(existing) => existing.cost>to_check.cost,
-                None => true
+                Some(existing) => existing.cost > to_check.cost,
+                None => true,
             };
             if is_new_or_better {
                 for dir in Direction::ADJACENT {
                     bevy::log::info!("Direction: {:?}", dir);
                     let Some(new_pos) = dir.move_point(&to_check.position) else {
-                        continue
+                        continue;
                     };
                     let Some(terrain) = board.get(&new_pos) else {
                         continue;
@@ -115,15 +115,22 @@ impl Unit {
                     };
                     let new_cost = to_check.cost + move_cost;
                     bevy::log::info!("New Cost: {}", new_cost);
-                    if new_cost < total_movement{
-                        pending_check.push(PossibleMovement { position: new_pos, layer: to_check.layer+1, cost: new_cost });
+                    if new_cost < total_movement {
+                        pending_check.push(PossibleMovement {
+                            position: new_pos,
+                            layer: to_check.layer + 1,
+                            cost: new_cost,
+                        });
                     }
                 }
                 movements.insert(to_check.position, to_check);
             }
         }
         bevy::log::info!("We have possible movements! {}", movements.len());
-        movements.into_iter().map(|(_, movement)| movement).collect()
+        movements
+            .into_iter()
+            .map(|(_, movement)| movement)
+            .collect()
     }
 }
 
@@ -138,7 +145,7 @@ pub enum UnitType {
 pub struct PossibleMovement {
     pub position: UVec2,
     pub layer: u32,
-    pub cost: u32
+    pub cost: u32,
 }
 
 impl UnitType {
@@ -223,7 +230,7 @@ impl Into<Matrix<TileTerrain>> for &Map {
 }
 
 // Asset loader
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct MapAssetLoader;
 
 #[derive(Debug, Error)]
@@ -339,7 +346,10 @@ fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
         owner: Owner(owner_id as u8),
         health: Life(health as u8),
         unit_type,
-        movement: Movement { mov_type: MovementType::Foot, movements: 40 }
+        movement: Movement {
+            mov_type: MovementType::Foot,
+            movements: 40,
+        },
     })
 }
 fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
@@ -515,7 +525,7 @@ mod tests {
                 owner: Owner(1),
                 health: Life(100),
                 unit_type: UnitType::Infantry,
-                movement: Movement{
+                movement: Movement {
                     mov_type: MovementType::Foot,
                     movements: 30,
                 }

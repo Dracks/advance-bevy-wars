@@ -1,63 +1,66 @@
 use bevy::prelude::*;
+use bevy::ui_widgets::{Activate, Button};
 use bevy_flair::prelude::*;
 
 use crate::{GameState, assets::FileAssets, menus::Menus};
 use assets_helper::AssetsTrait;
-use ui_helpers::prelude::{button_press_system, clean_entities};
-use ui_helpers::{prelude::Action, register_menu};
 
-#[derive(Component)]
-pub struct MainMenu;
-
-#[derive(Copy, Clone, Message, Debug)]
-pub enum MainMenuActions {
-    NewGame,
-    Editor,
-    Exit,
+pub fn ui_button(text: impl Into<String>) -> impl Scene {
+    let text: String = text.into();
+    bsn! {
+        Button
+        Node
+        ClassList::new("button")
+        Children[Text::new(text)]
+        Interaction
+    }
 }
 
-register_menu!(
-    register_main_menu,
-    Menus::MainMenu,
-    MainMenu,
-    MainMenuActions,
-    spawn_main_menu,
-    main_menu_actions_handler
-);
-
-pub fn spawn_main_menu(mut commands: Commands, assets_server: Res<AssetServer>) {
-    commands.spawn((
-        Node::default(),
-        NodeStyleSheet::new(FileAssets::MenuStyleMenuCss.load(&assets_server)),
-        MainMenu,
-        children![
-            (Text::new("Bevy Advance Wars"), Name::new("title")),
+pub fn spawn_main_menu() -> impl Scene {
+    let css = FileAssets::MenuStyleMenuCss.path();
+    bsn! {
+        Node
+        Styled::StyleSheet(css)
+        DespawnOnExit<Menus>(Menus::MainMenu)
+        Children[
             (
-                Node::default(),
-                Name::new("vertical_panel"),
-                children![
+                Text::new("Bevy Advance Wars")
+                Name::new("title")
+            ),
+            (
+                Node::default()
+                Name::new("vertical_panel")
+                Children[
                     (
-                        Button,
-                        children![Text::new("New Game"),],
-                        Action::new(MainMenuActions::NewGame),
+                        ui_button("New Game")
+                        on(go_to_game)
                     ),
                     (
-                        Button,
-                        children![Text::new("Editor"),],
-                        Action::new(MainMenuActions::Editor),
+
+                    ui_button("Editor")
+                        on(go_to_editor)
                     ),
                     (
-                        Button,
-                        Action::new(MainMenuActions::Exit),
-                        children![Text::new("Exit"),]
-                    )
+
+                    ui_button("Exit")
+                        on(exit_game)
+                    ),
                 ]
             )
-        ],
-    ));
+        ]
+    }
 }
 
-pub fn main_menu_actions_handler(
+fn go_to_game(_: On<Activate>, mut state: ResMut<NextState<GameState>>) {
+    state.set(GameState::InGame)
+}
+fn go_to_editor(_: On<Activate>, mut state: ResMut<NextState<GameState>>) {
+    state.set(GameState::InEditor)
+}
+fn exit_game(_: On<Activate>, mut exit: MessageWriter<AppExit>) {
+    exit.write(AppExit::Success);
+}
+/* pub fn main_menu_actions_handler(
     mut actions: MessageReader<MainMenuActions>,
     mut state: ResMut<NextState<GameState>>,
     mut exit: MessageWriter<AppExit>,
@@ -75,4 +78,4 @@ pub fn main_menu_actions_handler(
             }
         }
     }
-}
+} */

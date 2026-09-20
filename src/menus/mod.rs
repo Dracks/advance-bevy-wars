@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{GameState, menus::main_menu::register_main_menu};
+use crate::{GameState, menus::main_menu::spawn_main_menu};
 
 mod main_menu;
 
@@ -15,7 +15,7 @@ pub struct MenusPlugin;
 
 impl Plugin for MenusPlugin {
     fn build(&self, app: &mut App) {
-        app.add_sub_state::<Menus>();
-        register_main_menu(app);
+        app.add_sub_state::<Menus>()
+            .add_systems(OnEnter(Menus::MainMenu), spawn_main_menu.spawn());
     }
 }

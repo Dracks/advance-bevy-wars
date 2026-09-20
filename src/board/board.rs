@@ -1,6 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-};
+use std::collections::{HashMap, HashSet};
 
 use assets_helper::AssetsTrait;
 use auto_tiler::{AutoTiler, BoardTrait, Neighbor};
@@ -111,26 +109,33 @@ impl Board {
             ]
         };
 
-        let buildings = map.cells.keys().iter().map(|pos| (pos, map.cells.get(pos.0, pos.1))).filter_map(|(pos, data)| {
-            match data {
+        let buildings = map
+            .cells
+            .keys()
+            .iter()
+            .map(|pos| (pos, map.cells.get(pos.0, pos.1)))
+            .filter_map(|(pos, data)| match data {
                 Some(cell) => match cell.building {
                     Some(building) => Some((uvec2(pos.0 as u32, pos.1 as u32), building)),
-                    None => None
-                }
-                None => None
-            }
-        }).collect();
+                    None => None,
+                },
+                None => None,
+            })
+            .collect();
 
-        let units = map.cells.keys().iter().map(|pos| (pos, map.cells.get(pos.0, pos.1))).filter_map(|(pos, data)| {
-            match data {
+        let units = map
+            .cells
+            .keys()
+            .iter()
+            .map(|pos| (pos, map.cells.get(pos.0, pos.1)))
+            .filter_map(|(pos, data)| match data {
                 Some(cell) => match cell.unit {
                     Some(unit) => Some((uvec2(pos.0 as u32, pos.1 as u32), unit)),
-                    None => None
-                }
-                None => None
-            }
-        }).collect();
-
+                    None => None,
+                },
+                None => None,
+            })
+            .collect();
 
         Self {
             map,
