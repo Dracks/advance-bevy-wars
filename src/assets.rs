@@ -361,6 +361,8 @@ pub enum FileAssets {
     SoundsUiToggle004Ogg,
     #[allow(dead_code)]
     TextCreditsMd,
+    #[allow(dead_code)]
+    UnitsSoldierAbwu,
 }
 
 impl AssetsTrait for FileAssets {
@@ -374,9 +376,7 @@ impl AssetsTrait for FileAssets {
             FileAssets::ImagesGameEffectsBombPng => "images/game/effects/bomb.png",
             FileAssets::ImagesGameEffectsExplosionPng => "images/game/effects/explosion.png",
             FileAssets::ImagesGameEffectsGunattackPng => "images/game/effects/gunattack.png",
-            FileAssets::ImagesGameEffectsSmallExplosionPng => {
-                "images/game/effects/small_explosion.png"
-            }
+            FileAssets::ImagesGameEffectsSmallExplosionPng => "images/game/effects/small_explosion.png",
             FileAssets::ImagesGameEffectsTorpedoPng => "images/game/effects/torpedo.png",
             FileAssets::ImagesGameEffectsVulcanCannonPng => "images/game/effects/vulcan_cannon.png",
             FileAssets::ImagesGameGameBackgroundJpg => "images/game/game/background.jpg",
@@ -408,18 +408,12 @@ impl AssetsTrait for FileAssets {
             FileAssets::ImagesGameUnitsTcopterPng => "images/game/units/tcopter.png",
             FileAssets::ImagesGameUnitsWartankPng => "images/game/units/wartank.png",
             FileAssets::ImagesIconsNodesCarOutlineSvg => "images/icons/nodes/car-outline.svg",
-            FileAssets::ImagesIconsNodesDownloadOutlineSvg => {
-                "images/icons/nodes/download-outline.svg"
-            }
+            FileAssets::ImagesIconsNodesDownloadOutlineSvg => "images/icons/nodes/download-outline.svg",
             FileAssets::ImagesIconsNodesFlagOutlineSvg => "images/icons/nodes/flag-outline.svg",
             FileAssets::ImagesIconsNodesLayersOutlineSvg => "images/icons/nodes/layers-outline.svg",
-            FileAssets::ImagesIconsNodesPaperPlaneOutlineSvg => {
-                "images/icons/nodes/paper-plane-outline.svg"
-            }
+            FileAssets::ImagesIconsNodesPaperPlaneOutlineSvg => "images/icons/nodes/paper-plane-outline.svg",
             FileAssets::ImagesIconsNodesPersonOutlineSvg => "images/icons/nodes/person-outline.svg",
-            FileAssets::ImagesIconsNodesSettings2OutlineSvg => {
-                "images/icons/nodes/settings-2-outline.svg"
-            }
+            FileAssets::ImagesIconsNodesSettings2OutlineSvg => "images/icons/nodes/settings-2-outline.svg",
             FileAssets::ImagesIconsUiIconsDefaultPng => "images/icons/ui/iconsDefault.png",
             FileAssets::ImagesIconsUiSheetBlack1XPng => "images/icons/ui/sheet_black1x.png",
             FileAssets::ImagesIconsUiSheetBlack2XPng => "images/icons/ui/sheet_black2x.png",
@@ -434,15 +428,9 @@ impl AssetsTrait for FileAssets {
             FileAssets::MapTestAbwm => "map_test.abwm",
             FileAssets::MenuStyleUiCss => "menu_style/ui.css",
             FileAssets::MenuStyleMenuCss => "menu_style/menu.css",
-            FileAssets::MusicsCyberpunkMoonlightSonataV2Mp3 => {
-                "musics/Cyberpunk Moonlight Sonata v2.mp3"
-            }
-            FileAssets::MusicsImmaculateCommandGeorgesDeMorgansThemeCodenameReconMp3 => {
-                "musics/Immaculate_Command__Georges_DeMorgans_Theme_Codename_RECON.mp3"
-            }
-            FileAssets::MusicsTempestassAceInTheHoleMinatusLeonusMacrosThemeUnfinishedV08Mp3 => {
-                "musics/Tempestass_Ace_in_the_Hole__Minatus_Leonus_Macros_Theme_UNFINISHED_v0.8.mp3"
-            }
+            FileAssets::MusicsCyberpunkMoonlightSonataV2Mp3 => "musics/Cyberpunk Moonlight Sonata v2.mp3",
+            FileAssets::MusicsImmaculateCommandGeorgesDeMorgansThemeCodenameReconMp3 => "musics/Immaculate_Command__Georges_DeMorgans_Theme_Codename_RECON.mp3",
+            FileAssets::MusicsTempestassAceInTheHoleMinatusLeonusMacrosThemeUnfinishedV08Mp3 => "musics/Tempestass_Ace_in_the_Hole__Minatus_Leonus_Macros_Theme_UNFINISHED_v0.8.mp3",
             FileAssets::MusicsAwesomenessWav => "musics/awesomeness.wav",
             FileAssets::SoundsChipsHandle6Ogg => "sounds/chipsHandle6.ogg",
             FileAssets::SoundsEngineCircular000Ogg => "sounds/engineCircular_000.ogg",
@@ -559,6 +547,7 @@ impl AssetsTrait for FileAssets {
             FileAssets::SoundsUiToggle003Ogg => "sounds/ui/toggle_003.ogg",
             FileAssets::SoundsUiToggle004Ogg => "sounds/ui/toggle_004.ogg",
             FileAssets::TextCreditsMd => "text/credits.md",
+            FileAssets::UnitsSoldierAbwu => "units/soldier.abwu",
         }
     }
 }

@@ -1,46 +1,42 @@
 use bevy::prelude::*;
 
 use crate::{
-    board::{Board, MainBoard, PossibleMovement},
+    board::{Board, MainBoard, UnitDefinition},
     interactive::BoardPos,
     ui::Cursor,
 };
 
 const DELAY_FOR_LAYER_TO_SHOW: f32 = 0.05;
 
-#[derive(Message)]
-pub struct ShowMovementUi {
-    position: UVec2,
-    layer: u32,
-}
 
-impl From<PossibleMovement> for ShowMovementUi {
-    fn from(value: PossibleMovement) -> Self {
-        Self {
-            position: value.position,
-            layer: value.layer,
-        }
-    }
-}
-
-#[derive(Resource, Default)]
-pub struct ShownPositions {
-    pub movement: Vec<Entity>, // attack
-}
-
-impl ShownPositions {
-    fn reset(&mut self, cmds: &mut Commands) {
-        for elem in self.movement.iter() {
-            cmds.entity(*elem).despawn()
-        }
-        self.movement = Vec::default();
-    }
-}
+#[derive(Resource, Deref)]
+pub struct CurrentSelected(Entity);
 
 #[derive(Component)]
-struct MovementOption;
+pub struct Selected(UVec2);
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Clone)]
+pub struct MovementOption{
+    rel: Entity
+}
+
+impl MovementOption {
+    fn new(rel: Entity) -> Self {
+        Self{
+            rel
+        }
+    }
+}
+
+impl Default for MovementOption{
+    fn default() -> Self {
+        Self {
+            rel: Entity::from_raw_u32(0).expect("Movement Option default")
+        }
+    }
+}
+
+#[derive(Component, Deref, DerefMut, Clone, Default)]
 pub struct Delay(Timer);
 
 pub fn apply_visibility_delayed(
@@ -58,36 +54,48 @@ pub fn apply_visibility_delayed(
     }
 }
 
-pub fn on_shown_movement(
+pub fn on_drop_movement(
+    trigger: On<Remove, Selected>,
     mut commands: Commands,
-    board_entity: Single<Entity, With<MainBoard>>,
-    mut on_show: MessageReader<ShowMovementUi>,
-    mut current: ResMut<ShownPositions>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    options: Query<(Entity,&MovementOption)>,
 ) {
-    for msg in on_show.read() {
-        let board_helper = BoardPos::from(msg.position);
-        commands
-            .entity(board_entity.entity())
-            .with_children(|parent| {
-                let new_entity = parent
-                    .spawn((
-                        MovementOption,
-                        Transform::from_translation(
-                            board_helper.get_screen_pos(0) + vec3(1.0, 1.0, 0.0),
-                        ),
-                        Mesh2d(meshes.add(Rectangle::new(30., 30.))),
-                        MeshMaterial2d(materials.add(Color::linear_rgba(0., 0., 1., 0.3))),
-                        Visibility::Hidden,
-                        Delay(Timer::from_seconds(
-                            msg.layer as f32 * DELAY_FOR_LAYER_TO_SHOW,
-                            TimerMode::Once,
-                        )),
-                    ))
-                    .id();
-                current.movement.push(new_entity);
-            });
+    let trigger_entity = trigger.entity;
+    for (entity, option) in options.iter(){
+        if trigger_entity == option.rel {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+pub fn on_shown_movement(
+    trigger: On<Insert, Selected>,
+    mut commands: Commands,
+    entities_selected: Query<(&UnitDefinition,&BoardPos), With<Selected>>,
+    board_entity: Single<Entity, With<MainBoard>>,
+    board: Res<Board>,
+) {
+    let entity = trigger.entity;
+    let Ok((unit_definition, pos)) = entities_selected.get(entity) else {
+        return;
+    };
+    let possibilities = unit_definition.get_movements(**pos, &board);
+    for position in possibilities {
+        let board_helper = BoardPos::from(position.position);
+        let time = Timer::from_seconds(
+                position.layer as f32 * DELAY_FOR_LAYER_TO_SHOW,
+                TimerMode::Once,
+            );
+        let child= commands.spawn_scene(bsn!{
+            MovementOption::new(entity)
+            Transform::from_translation(
+                board_helper.get_screen_pos(0) + vec3(1.0, 1.0, 0.0),
+            )
+            Mesh2d(asset_value(Rectangle::new(30., 30.)))
+            MeshMaterial2d<ColorMaterial>(asset_value(Color::linear_rgba(0., 0., 1., 0.3)))
+            Visibility::Hidden
+            Delay(time)
+        }).id();
+        commands.entity(*board_entity).add_child(child);
     }
 }
 
@@ -95,17 +103,19 @@ pub fn on_click_cursor(
     mut commands: Commands,
     mouse: Res<ButtonInput<MouseButton>>,
     board: Res<Board>,
+    current_selected: Option<ResMut<CurrentSelected>>,
     cursor: Single<&Cursor>,
-    mut shown: ResMut<ShownPositions>,
-    mut movement_writer: MessageWriter<ShowMovementUi>,
 ) {
     if mouse.just_pressed(MouseButton::Left) {
         let pos = cursor.position;
-        shown.reset(&mut commands);
-        let Some(unit) = board.units.get(&pos) else {
+        let Some(entity) = board.get_entity_at(&pos) else {
+            if let Some(current_selected) = current_selected {
+            commands.entity(**current_selected).remove::<Selected>();
+            commands.remove_resource::<CurrentSelected>();
+            }
             return;
         };
-        let possible_movements = unit.get_movements(pos, &board);
-        movement_writer.write_batch(possible_movements.into_iter().map(|mov| mov.into()));
+        commands.entity(entity).insert(Selected(pos));
+        commands.insert_resource(CurrentSelected(entity));
     }
 }
