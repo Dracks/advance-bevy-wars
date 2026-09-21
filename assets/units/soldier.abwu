@@ -1,0 +1,13 @@
+[unit]
+version=1
+type="infantry"
+name="Infantry"
+
+[movement]
+points=100
+
+[movement.costs]
+plane=10
+forest=15
+read=10
+mountain=20

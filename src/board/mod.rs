@@ -5,11 +5,13 @@ mod board;
 mod direction;
 mod map;
 mod terrain;
+mod unit;
 
 use bevy_flair::style::components::Styled;
 pub use board::*;
 pub use direction::*;
 pub use map::*;
+pub use unit::*;
 use ui_helpers::prelude::*;
 
 use crate::{

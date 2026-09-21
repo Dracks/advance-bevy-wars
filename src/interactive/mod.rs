@@ -93,32 +93,3 @@ impl Capture {
 // Will be nice to be able to force to have owner
 pub struct Income(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum MovementType {
-    Foot,
-    Weels,
-}
-
-impl MovementType {
-    fn foot_costs(terrain: &Terrain) -> Option<u32> {
-        match terrain {
-            Terrain::Plane => Some(10),
-            Terrain::Forest => Some(15),
-            Terrain::Road => Some(10),
-            Terrain::Mountain => Some(20),
-            _ => None,
-        }
-    }
-    pub fn cost(&self, terrain: &Terrain) -> Option<u32> {
-        match self {
-            Self::Foot => MovementType::foot_costs(terrain),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct Movement {
-    pub mov_type: MovementType,
-    pub movements: u32,
-}

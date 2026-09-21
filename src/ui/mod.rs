@@ -6,13 +6,8 @@ use ui_helpers::prelude::clean_entities;
 mod movement;
 
 use crate::{
-    GameState,
-    animations::{AnimationIndices, AnimationTimer},
-    assets::FileAssets,
-    board::{Board, BoardLoad, ShowBoard},
-    ui::movement::{
-        ShowMovementUi, ShownPositions, apply_visibility_delayed, on_click_cursor,
-        on_shown_movement,
+    GameState, animations::{AnimationIndices, AnimationTimer}, assets::FileAssets, board::{Board, BoardLoad, ShowBoard}, ui::movement::{
+     apply_visibility_delayed, on_click_cursor, on_drop_movement, on_shown_movement,
     },
 };
 
@@ -25,16 +20,17 @@ pub struct HoverCell {
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ShownPositions::default())
-            .add_message::<ShowMovementUi>()
+        app
             .add_systems(OnEnter(GameState::InGame), setup_game_ui)
             .add_systems(OnExit(GameState::InGame), clean_entities::<GameUI>)
             .add_systems(Update, update_game_ui.run_if(in_state(BoardLoad::Complete)))
             .add_systems(Update, follow_cursor.run_if(in_state(ShowBoard)))
             .add_systems(
                 Update,
-                (on_shown_movement, on_click_cursor, apply_visibility_delayed),
+                (on_click_cursor, apply_visibility_delayed),
             )
+            .add_observer(on_shown_movement)
+            .add_observer(on_drop_movement)
             .add_message::<HoverCell>();
     }
 }

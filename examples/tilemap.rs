@@ -62,8 +62,8 @@ fn update_tileset_image(
     let chunk = *chunk_query;
     for event in events.read() {
         if event.is_loaded_with_dependencies(chunk.tileset.id()) {
-            let image = images.get_mut(&chunk.tileset).unwrap();
-            image.reinterpret_size(Extent3d {
+            let mut image = images.get_mut(&chunk.tileset).unwrap();
+            let _ = image.reinterpret_size(Extent3d {
                 width: 64,
                 height: 64,
                 depth_or_array_layers: 765,

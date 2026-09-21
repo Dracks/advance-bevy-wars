@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use bevy::{
     asset::{AssetLoader, LoadContext, io::Reader},
@@ -8,12 +7,10 @@ use thiserror::Error;
 use toml::Table;
 
 use crate::{
-    board::{Board, Direction, terrain::TileTerrain},
-    interactive::{Income, Life, Movement, MovementType, Owner},
-    matrix::Matrix,
+    board::{ terrain::TileTerrain, unit::{UnitType, Unit}}, interactive::{Income, Life, Owner}, matrix::Matrix,
 };
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Terrain {
     Plane,
     Road,
@@ -79,85 +76,8 @@ impl TryFrom<&str> for BuildingType {
         }
     }
 }
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Unit {
-    pub owner: Owner,
-    pub health: Life,
-    pub unit_type: UnitType,
-    pub movement: Movement,
-}
 
-impl Unit {
-    pub fn get_movements(&self, pos: UVec2, board: &Board) -> Vec<PossibleMovement> {
-        let mut movements: HashMap<UVec2, PossibleMovement> = HashMap::default();
-        let mut pending_check = vec![PossibleMovement {
-            cost: 0,
-            layer: 0,
-            position: pos,
-        }];
-        let total_movement = self.movement.movements;
-        while let Some(to_check) = pending_check.pop() {
-            let is_new_or_better = match movements.get(&to_check.position) {
-                Some(existing) => existing.cost > to_check.cost,
-                None => true,
-            };
-            if is_new_or_better {
-                for dir in Direction::ADJACENT {
-                    bevy::log::info!("Direction: {:?}", dir);
-                    let Some(new_pos) = dir.move_point(&to_check.position) else {
-                        continue;
-                    };
-                    let Some(terrain) = board.get(&new_pos) else {
-                        continue;
-                    };
-                    let Some(move_cost) = self.movement.mov_type.cost(terrain) else {
-                        continue;
-                    };
-                    let new_cost = to_check.cost + move_cost;
-                    bevy::log::info!("New Cost: {}", new_cost);
-                    if new_cost < total_movement {
-                        pending_check.push(PossibleMovement {
-                            position: new_pos,
-                            layer: to_check.layer + 1,
-                            cost: new_cost,
-                        });
-                    }
-                }
-                movements.insert(to_check.position, to_check);
-            }
-        }
-        bevy::log::info!("We have possible movements! {}", movements.len());
-        movements
-            .into_iter()
-            .map(|(_, movement)| movement)
-            .collect()
-    }
-}
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum UnitType {
-    Infantry,
-    Mech,
-    Reccon,
-    Tank,
-}
-
-pub struct PossibleMovement {
-    pub position: UVec2,
-    pub layer: u32,
-    pub cost: u32,
-}
-
-impl UnitType {
-    pub fn get_movement(&self) -> u32 {
-        match self {
-            Self::Infantry => 30,
-            Self::Mech => 25,
-            Self::Reccon => 50,
-            Self::Tank => 45,
-        }
-    }
-}
 
 pub struct UnknownUnitType;
 impl TryFrom<&str> for UnitType {
@@ -346,10 +266,6 @@ fn parse_v1_unit(unit_source: &Table) -> Result<Unit, MapLoaderError> {
         owner: Owner(owner_id as u8),
         health: Life(health as u8),
         unit_type,
-        movement: Movement {
-            mov_type: MovementType::Foot,
-            movements: 40,
-        },
     })
 }
 fn parse_v1(map_source: &Table) -> Result<Map, MapLoaderError> {
@@ -525,10 +441,6 @@ mod tests {
                 owner: Owner(1),
                 health: Life(100),
                 unit_type: UnitType::Infantry,
-                movement: Movement {
-                    mov_type: MovementType::Foot,
-                    movements: 30,
-                }
             })
         );
         assert_eq!(
@@ -537,10 +449,6 @@ mod tests {
                 owner: Owner(2),
                 health: Life(50),
                 unit_type: UnitType::Mech,
-                movement: Movement {
-                    mov_type: MovementType::Foot,
-                    movements: 30,
-                }
             })
         );
     }

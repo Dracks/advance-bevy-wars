@@ -2,13 +2,14 @@ use std::collections::{HashMap, HashSet};
 
 use assets_helper::AssetsTrait;
 use auto_tiler::{AutoTiler, BoardTrait, Neighbor};
-use bevy::{prelude::*, render::render_resource::encase::private::Length};
+use bevy::{prelude::*, render::render_resource::{encase::private::Length}};
 
 use crate::{
     assets::FileAssets,
     board::{
         direction::Direction,
-        map::{Building, Map, Terrain, Unit},
+        map::{Building, Map, Terrain},
+        unit::Unit,
         terrain::TileTerrain,
     },
     interactive::BoardPos,
@@ -27,6 +28,19 @@ pub struct Board {
     layers: Vec<BoardLayer>,
     pub buildings: HashMap<UVec2, Building>,
     pub units: HashMap<UVec2, Unit>,
+    entities: HashMap<UVec2, UnitBuildingEntity>
+}
+
+#[derive(Default, Clone)]
+struct UnitBuildingEntity{
+    unit: Option<Entity>,
+    building: Option<Entity>
+}
+
+impl UnitBuildingEntity{
+    fn get_priority(&self ) -> Option<Entity> {
+        self.unit.or(self.building)
+    }
 }
 
 #[derive(Component)]
@@ -142,6 +156,7 @@ impl Board {
             layers: layers.into(),
             buildings,
             units,
+            entities: Default::default()
         }
     }
     pub fn get_size(&self) -> (usize, usize) {
@@ -172,7 +187,7 @@ impl Board {
             bevy::log::error!("Map not correctly loaded");
             return;
         };
-        let board = Board::new(map.clone());
+        let mut board = Board::new(map.clone());
 
         let texture_handle = FileAssets::ImagesGameTerrainPng.load(&assets);
         let texture_atlas = helper.atlas_layout(UVec2::splat(32));
@@ -210,7 +225,7 @@ impl Board {
                     }
                     if let Some(unit) = cell_info.unit {
                         bevy::log::info!("We have units! {:?}", unit);
-                        parent.spawn((
+                        let entity=parent.spawn((
                             UnitComponent,
                             board_position.clone(),
                             Sprite::from_atlas_image(
@@ -220,12 +235,14 @@ impl Board {
                                     index: 0,
                                 },
                             ),
+                            unit.unit_type.to_definition(),
                             Transform::from_translation(board_position.get_screen_pos(1)),
                         ));
+                        board.entities.insert(*board_position, UnitBuildingEntity { unit: Some(entity.id()), building: None });
                     }
                     if let Some(building) = cell_info.building {
                         bevy::log::info!("We have buildings! {:?}", building);
-                        parent.spawn((
+                        let entity = parent.spawn((
                             BuildingCompoent,
                             board_position.clone(),
                             Sprite::from_atlas_image(
@@ -237,10 +254,16 @@ impl Board {
                             ),
                             Transform::from_translation(board_position.get_screen_pos(0)),
                         ));
+                        board.entities.entry(*board_position).or_default().building = Some(entity.id());
+                                                   //.insert(*board_position, UnitBuildingEntity { unit: Some(entity.id()), building: None });
                     }
                 }
             });
         commands.insert_resource(board);
+    }
+
+    pub fn get_entity_at(&self, pos: &UVec2) -> Option<Entity> {
+        self.entities.get(pos).map(|entity_pack| entity_pack.get_priority()).flatten()
     }
 }
 

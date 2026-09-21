@@ -60,22 +60,3 @@ fn go_to_editor(_: On<Activate>, mut state: ResMut<NextState<GameState>>) {
 fn exit_game(_: On<Activate>, mut exit: MessageWriter<AppExit>) {
     exit.write(AppExit::Success);
 }
-/* pub fn main_menu_actions_handler(
-    mut actions: MessageReader<MainMenuActions>,
-    mut state: ResMut<NextState<GameState>>,
-    mut exit: MessageWriter<AppExit>,
-) {
-    for action in actions.read() {
-        match action {
-            MainMenuActions::Exit => {
-                exit.write(AppExit::Success);
-            }
-            MainMenuActions::NewGame => {
-                state.set(GameState::InGame);
-            }
-            MainMenuActions::Editor => {
-                state.set(GameState::InEditor);
-            }
-        }
-    }
-} */
